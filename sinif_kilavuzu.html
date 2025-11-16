@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınıf Kılavuzu ve Can Kuralları</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #fff; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h2 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; margin-top: 30px;}
+        h3 { color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .primary { background-color: #e6f7ff; font-weight: bold; color: #005c99; }
+        .secondary { background-color: #fff0e6; }
+        .hp-table td:nth-child(3) { font-weight: bold; color: #d93025; } 
+        
+        /* Irk ve Yetenek Tablosu Stili */
+        .race-bonus-table th, .race-bonus-table td { text-align: left; }
+        .race-bonus-table th:nth-child(3), .race-bonus-table td:nth-child(3) { text-align: center; } 
+        .stat-mod { background-color: #fffae6; }
+        .note { margin-top: 30px; font-style: italic; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <h2>Sınıf Öncelik Kılavuzu</h2>
+    <p>Bu tablo, her sınıf için Birincil ve İkincil İstatistik önceliklerini gösterir.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sınıf</th>
+                <th>Birincil İstatistik (En Önemli)</th>
+                <th>İkincil İstatistik (Gerekli)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>**Fighter (Savaşçı)**</td><td class="primary">FİZİKSEL GÜÇ veya ÇEVİKLİK</td><td class="secondary">Fiziksel Güç veya Çeviklik</td></tr>
+            <tr><td>**Wizard (Büyücü)**</td><td class="primary">ZEKA</td><td class="secondary">ÇEVİKLİK veya Zeka</td></tr>
+            <tr><td>**Cleric (Ruhban)**</td><td class="primary">BÜYÜ</td><td class="secondary">Fiziksel Güç veya Karizma</td></tr>
+            <tr><td>**Rogue (Hırsız)**</td><td class="primary">ÇEVİKLİK</td><td class="secondary">ZEKA (Yetenekler) veya Karizma (Sosyal)</td></tr>
+            <tr><td>**Sorcerer (Büyücü)**</td><td class="primary">KARİZMA</td><td class="secondary">ZEKA</td></tr>
+            <tr><td>**Bard (Ozan)**</td><td class="primary">KARİZMA</td><td class="secondary">ÇEVİKLİK</td></tr>
+            <tr><td>**Paladin (Paladin)**</td><td class="primary">FİZİKSEL GÜÇ ve KARİZMA</td><td class="secondary">Fiziksel Güç veya Karizma</td></tr>
+            <tr><td>**Ranger (Bekçi)**</td><td class="primary">ÇEVİKLİK</td><td class="secondary">Fiziksel Güç veya Çeviklik</td></tr>
+            <tr><td>**Barbarian (Barbar)**</td><td class="primary">FİZİKSEL GÜÇ</td><td class="secondary">Fiziksel Güç</td></tr>
+            <tr><td>**Monk (Keşiş)**</td><td class="primary">ÇEVİKLİK ve BÜYÜ</td><td class="secondary">Çeviklik veya Büyü</td></tr>
+            <tr><td>**Warlock (Büyücü)**</td><td class="primary">KARİZMA</td><td class="secondary">ZEKA veya Karizma</td></tr>
+            <tr><td>**Druid (Druid)**</td><td class="primary">BÜYÜ</td><td class="secondary">ZEKA veya Büyü</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Can (HP) Artış Kuralları</h2>
+    <p>Tüm sınıflar 2-5. Seviyeler arasında sabit +10 HP kazanır.</p>
+
+    <table class="hp-table">
+        <thead>
+            <tr>
+                <th>Sınıf (EN/TR)</th>
+                <th>Rol Kategorisi</th>
+                <th>1. Seviye Başlangıç Canı</th>
+                <th>Seviye Başına Can Artışı (2-5. Seviyeler)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>**Barbarian (Barbar)**</td><td>Ağır Yakın Dövüş</td><td>**130 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Fighter (Savaşçı)**</td><td>Ağır/Orta Yakın Dövüş</td><td>**125 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Paladin (Paladin)**</td><td>Orta Hibrit</td><td>**120 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Cleric (Ruhban)**</td><td>Orta Büyücü/Destek</td><td>**115 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Ranger (Bekçi)**</td><td>Hibrit Çevik</td><td>**115 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Monk (Keşiş)**</td><td>Hafif Yakın Dövüş</td><td>**110 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Rogue (Hırsız)**</td><td>Hafif Çevik</td><td>**110 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Bard (Ozan)**</td><td>Hafif Büyücü/Destek</td><td>**105 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Druid (Druid)**</td><td>Hafif Büyücü</td><td>**105 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Warlock (Büyücü)**</td><td>Hafif Büyücü</td><td>**105 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Sorcerer (Büyücü)**</td><td>Hafif Büyücü</td><td>**100 HP**</td><td>+10 HP</td></tr>
+            <tr><td>**Wizard (Büyücü)**</td><td>En Kırılgan Büyücü</td><td>**100 HP**</td><td>+10 HP</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Irk Bonusları ve İstatistik Değişiklikleri</h2>
+    <p>Aşağıdaki tablo, karakterinizi oluştururken seçtiğiniz ırkın hangi istatistiklere ve cana bonus sağladığını gösterir.</p>
+    
+    <table class="race-bonus-table">
+        <thead>
+            <tr>
+                <th>Irk</th>
+                <th>İstatistik Bonusları</th>
+                <th class="stat-mod">Can (HP) Bonusu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>**İnsan**</td><td>Tüm İstatistikler +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Elf**</td><td>ÇEVİKLİK +2, ZEKA +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Cüce**</td><td>FİZİKSEL GÜÇ +2, BÜYÜ +1</td><td class="stat-mod">+5 HP</td></tr>
+            <tr><td>**Yarı-Elf**</td><td>KARİZMA +2, Seçilen İki İstatistik +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Ejderha Soyu**</td><td>FİZİKSEL GÜÇ +2, KARİZMA +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Yarı-Ork**</td><td>FİZİKSEL GÜÇ +2, BÜYÜ +1</td><td class="stat-mod">+10 HP</td></tr>
+            <tr><td>**Gnome**</td><td>ZEKA +2, ÇEVİKLİK +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Buçukluk**</td><td>ÇEVİKLİK +2, KARİZMA +1</td><td class="stat-mod">+0 HP</td></tr>
+            <tr><td>**Tiefling**</td><td>ZEKA +1, KARİZMA +2</td><td class="stat-mod">+0 HP</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Yetenek ve Zar Atma Kılavuzu</h2>
+    <p>Bu kılavuz, karakter kağıdınızdaki yetenek ve kurtulma zarlarını atarken kullanmanız gereken ana istatistik bonusunu gösterir. (Eşleştirme: Str=F.Güç, Dex=Çeviklik, Wis=Büyü, Int=Zeka, Cha=Karizma)</p>
+
+    <table class="race-bonus-table">
+        <thead>
+            <tr>
+                <th>Yetenek (Skill)</th>
+                <th>Kullanılacak İstatistik</th>
+                <th>Açıklama</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="3"><strong>YETENEK KONTROLLERİ</strong></td>
+            </tr>
+            <tr><td>**Acrobatics (Akrobasi)** (Çeviklik)</td><td>ÇEVİKLİK Bonusu</td><td>Denge, takla ve çevik hareket gerektiren durumlar.</td></tr>
+            <tr><td>**Animal Handling (Hayvan İdaresi)** (Büyü)</td><td>BÜYÜ Bonusu</td><td>Hayvanların niyetlerini anlama veya onları eğitme.</td></tr>
+            <tr><td>**Arcana (Gizem)** (Zeka)</td><td>ZEKA Bonusu</td><td>Büyü türleri, semboller ve büyülü objeler hakkında bilgi.</td></tr>
+            <tr><td>**Athletics (Atletizm)** (F.Güç)</td><td>FİZİKSEL GÜÇ Bonusu</td><td>Koşma, tırmanma, yüzme veya bir şeyi zorla itme.</td></tr>
+            <tr><td>**Deception (Kandırma)** (Karizma)</td><td>KARİZMA Bonusu</td><td>Yalan söyleyerek veya aldatarak birini yanlış yönlendirme.</td></tr>
+            <tr><td>**History (Tarih)** (Zeka)</td><td>ZEKA Bonusu</td><td>Geçmiş olaylar, savaşlar ve krallıklar hakkında bilgi.</td></tr>
+            <tr><td>**Insight (Sezgi)** (Büyü)</td><td>BÜYÜ Bonusu</td><td>Birinin niyetini veya duygusal durumunu anlama.</td></tr>
+            <tr><td>**Intimidation (Korkutma)** (Karizma)</td><td>KARİZMA Bonusu</td><td>Tehdit veya fiziksel şiddet gösterisiyle birini zorlama.</td></tr>
+            <tr><td>**Investigation (Araştırma)** (Zeka)</td><td>ZEKA Bonusu</td><td>Gizli ipuçları, şifreler veya bir mekanı detaylıca inceleme.</td></tr>
+            <tr><td>**Medicine (Tıp)** (Büyü)</td><td>BÜYÜ Bonusu</td><td>Bir yaralıyı tedavi etme veya hastalık teşhisi.</td></tr>
+            <tr><td>**Nature (Doğa)** (Zeka)</td><td>ZEKA Bonusu</td><td>Hayvanlar, bitkiler, coğrafya veya hava durumu hakkında bilgi.</td></tr>
+            <tr><td>**Perception (Algı)** (Büyü)</td><td>BÜYÜ Bonusu</td><td>Gizlenmiş nesneleri fark etme veya çevredeki tehlikeleri sezme.</td></tr>
+            <tr><td>**Performance (Gösteri)** (Karizma)</td><td>KARİZMA Bonusu</td><td>Müzik, dans veya tiyatro ile bir kitleyi eğlendirme.</td></tr>
+            <tr><td>**Persuasion (İkna)** (Karizma)</td><td>KARİZMA Bonusu</td><td>Mantık veya itibar kullanarak birini rızasıyla ikna etme.</td></tr>
+            <tr><td>**Religion (Din)** (Zeka)</td><td>ZEKA Bonusu</td><td>Tanrılar, dini pratikler ve kültler hakkında bilgi.</td></tr>
+            <tr><td>**Sleight of Hand (El Çabukluğu)** (Çeviklik)</td><td>ÇEVİKLİK Bonusu</td><td>Cepteki eşyayı çalma, kilit açma veya küçük nesneleri gizleme.</td></tr>
+            <tr><td>**Stealth (Gizlenme)** (Çeviklik)</td><td>ÇEVİKLİK Bonusu</td><td>Görünmeden ilerleme, sessiz kalma veya birini takip etme.</td></tr>
+            <tr><td>**Survival (Hayatta Kalma)** (Büyü)</td><td>BÜYÜ Bonusu</td><td>İz sürme, yön bulma ve vahşi doğada yiyecek bulma.</td></tr>
+            <tr>
+                <td colspan="3"><strong>KURTULMA ZARLARI (SAVING THROWS)</strong></td>
+            </tr>
+            <tr><td>**FİZİKSEL GÜÇ** Kurtulma Zarı (F.Güç)</td><td>FİZİKSEL GÜÇ Bonusu</td><td>Büyük bir darbeyi engelleme, zehirli bir maddeyi dışarı atma.</td></tr>
+            <tr><td>**ÇEVİKLİK** Kurtulma Zarı (Çeviklik)</td><td>ÇEVİKLİK Bonusu</td><td>Büyülü bir ateş topundan veya tuzaktan kaçınma.</td></tr>
+            <tr><td>**BÜYÜ** Kurtulma Zarı (Büyü)</td><td>BÜYÜ Bonusu</td><td>Zihni kontrol eden büyülere veya aldatmacalara karşı direnme.</td></tr>
+            <tr><td>**ZEKA** Kurtulma Zarı (Zeka)</td><td>ZEKA Bonusu</td><td>Bilinçli bir zihinsel etkiye karşı direnme.</td></tr>
+            <tr><td>**KARİZMA** Kurtulma Zarı (Karizma)</td><td>KARİZMA Bonusu</td><td>Bir varlığın veya büyünün ruhunuzu ele geçirmesine direnme.</td></tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <p><strong>İstatistiklerinizin Amacı:</strong> Birincil İstatistik, sınıf yeteneklerinizin ve saldırılarınızın başarısını belirler. İkincil İstatistik, karakterinizin hayatta kalma yeteneğini veya ek yeteneklerini destekler.</p>
+    </div>
+
+</body>
+</html>

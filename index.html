@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karakter Kağıdı (Son Hâl)</title>
+    <style>
+        /* TEMEL STİLLER */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .section-title { background-color: #e9e9e9; padding: 8px; margin-top: 25px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; color: #555; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        
+        /* GENEL INPUT VE TEXTAREA STİLLERİ */
+        input[type="text"], textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { resize: vertical; }
+        
+        /* GRUPLAMA VE YAN YANA DÜZEN STİLLERİ */
+        .stat-group { display: flex; flex-wrap: wrap; gap: 20px; }
+        .stat-item { flex: 1 1 calc(50% - 20px); min-width: 200px; }
+        .full-width { flex: 1 1 100%; }
+        
+        /* DEĞER VE BONUS KUTUSU DÜZENİ */
+        .value-bonus-group { display: flex; gap: 10px; }
+        .value-input-container { flex: 2; display: flex; flex-direction: column; } 
+        .bonus-input-container { flex: 1; display: flex; flex-direction: column; } 
+        .value-bonus-group input { width: 100%; margin-bottom: 0; }
+        .value-bonus-group label { font-weight: normal; font-size: 0.9em; text-align: center; margin-top: 5px; }
+
+        /* CAN ve ZIRH KUTULARI (YAN YANA) */
+        .hp-armor-group { display: flex; gap: 20px; width: 100%; }
+        .hp-armor-group .stat-item { flex: 1 1 calc(50% - 20px); min-width: unset; }
+
+        /* ZAR ATMA ALANI STİLİ */
+        .dice-roller {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #rollButton {
+            background-color: #4CAF50; /* Yeşil */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        #rollButton:hover { background-color: #45a049; }
+        #diceResult {
+            font-size: 2em;
+            font-weight: bold;
+            color: #d93025; /* Kırmızı */
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Karakter Kağıdı</h1>
+
+    <div class="section-title">✨ Temel Bilgiler</div>
+    <div class="stat-group">
+        <div class="stat-item"><label for="isim">İSİM</label><input type="text" id="isim" name="isim"></div>
+        <div class="stat-item">
+            <label for="sinif">SINIF</label>
+            <input type="text" id="sinif" name="sinif" placeholder="Örn: Savaşçı, Büyücü">
+            <small style="display: block; margin-top: -10px; color: #1a73e8;">Sınıf/Irk kılavuzu için <a href="sinif_kilavuzu.html" target="_blank">Kılavuzu Aç</a>.</small>
+        </div>
+        <div class="stat-item"><label for="irk">IRK</label><input type="text" id="irk" name="irk"></div>
+        <div class="stat-item"><label for="yas">YAŞ</label><input type="text" id="yas" name="yas"></div>
+        <div class="stat-item full-width"><label for="onceki_meslek">ÖNCEKİ MESLEK</label><input type="text" id="onceki_meslek" name="onceki_meslek"></div>
+    </div>
+
+    <div class="section-title">📊 İstatistikler</div>
+    <p style="margin-top: -10px; margin-bottom: 20px; font-style: italic;">(Not: Bonus hesaplaması manuel yapılır. Bonus = (İstatistik - 10) / 2 kuralını uygulayınız.)</p>
+    
+    <div class="hp-armor-group">
+        <div class="stat-item">
+            <label for="can">CAN (Mevcut / Maks.)</label>
+            <input type="text" id="can" name="can" placeholder="Örn: 100 / 112">
+        </div>
+        <div class="stat-item">
+            <label for="zirh">ZIRH DEĞERİ</label>
+            <input type="text" id="zirh" name="zirh" placeholder="Örn: 15">
+        </div>
+    </div>
+    
+    <div class="stat-group">
+        <div class="stat-item">
+            <label>FİZİKSEL GÜÇ</label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="fiziksel_guc_val" name="fiziksel_guc_val" placeholder="Değer (Örn: 14)"><label for="fiziksel_guc_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="fiziksel_guc_bonus" name="fiziksel_guc_bonus" placeholder="+2"><label for="fiziksel_guc_bonus">Bonus</label></div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <label>BÜYÜ</label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="buyu_val" name="buyu_val" placeholder="Değer (Örn: 10)"><label for="buyu_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="buyu_bonus" name="buyu_bonus" placeholder="+0"><label for="buyu_bonus">Bonus</label></div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <label>ÇEVİKLİK</label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="hiz_val" name="hiz_val" placeholder="Değer (Örn: 7)"><label for="hiz_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="hiz_bonus" name="hiz_bonus" placeholder="-1"><label for="hiz_bonus">Bonus</label></div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <label>ZEKA</label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="zeka_val" name="zeka_val" placeholder="Değer (Örn: 12)"><label for="zeka_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="zeka_bonus" name="zeka_bonus" placeholder="+1"><label for="zeka_bonus">Bonus</label></div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <label>KARİZMA</label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="karizma_val" name="karizma_val" placeholder="Değer (Örn: 9)"><label for="karizma_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="karizma_bonus" name="karizma_bonus" placeholder="+0"><label for="karizma_bonus">Bonus</label></div>
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <label for="kritik">KRİTİK</label>
+            <input type="text" id="kritik" name="kritik">
+        </div>
+    </div>
+    
+    <div class="dice-roller">
+        <h3>Zar Atma Alanı (D20)</h3>
+        <p>Beceri testleri için 20 yüzlü zarı atın!</p>
+        <button id="rollButton">D20 ZAR AT</button>
+        <div id="diceResult">---</div>
+    </div>
+
+    <div class="section-title">⚔️ Yetenekler ve Eşyalar</div>
+    <div class="stat-group">
+        <div class="stat-item full-width"><label for="yetenekler">YETENEKLER</label><textarea id="yetenekler" name="yetenekler" rows="4" placeholder="Aktif yeteneklerinizi buraya yazın..."></textarea></div>
+        <div class="stat-item full-width"><label for="pasif_yetenekler">PASİF YETENEKLER</label><textarea id="pasif_yetenekler" name="pasif_yetenekler" rows="3" placeholder="Pasif yeteneklerinizi ve etkilerini buraya yazın..."></textarea></div>
+        <div class="stat-item full-width"><label for="itemler">ITEMLER</label><textarea id="itemler" name="itemler" rows="5" placeholder="Envanterinizdeki eşyaları listeleyin..."></textarea></div>
+    </div>
+
+    <p style="text-align: center; margin-top: 30px;">Bu form, **FRP** karakterinizi oluşturmanız için tasarlanmıştır. @SylonAge</p>
+
+</div> 
+
+<script>
+    document.getElementById('rollButton').addEventListener('click', function() {
+        // 1 ile 20 arasında rastgele bir tam sayı üretir
+        const result = Math.floor(Math.random() * 20) + 1;
+        const resultElement = document.getElementById('diceResult');
+        
+        resultElement.textContent = result;
+
+        // Kritik Vuruş (20) ve Kritik Hata (1) için renkli uyarılar
+        if (result === 20) {
+            resultElement.style.color = 'green';
+            resultElement.textContent += " (KRİTİK BAŞARI!)";
+        } else if (result === 1) {
+            resultElement.style.color = '#8B0000'; // Koyu kırmızı
+            resultElement.textContent += " (KRİTİK HATA!)";
+        } else {
+            resultElement.style.color = '#d93025'; // Normal sonuç rengi
+        }
+    });
+</script>
+
+</body>
+</html>
