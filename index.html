@@ -19,6 +19,7 @@
             
             /* İstatistik Renkleri */
             --stat-str: #ff5733;
+            --stat-con: #008080; /* Yeni Dayanıklılık rengi */
             --stat-bilgelik: #6a0572;
             --stat-dex: #008000;
             --stat-int: #007bff;
@@ -26,6 +27,7 @@
 
             /* İstatistik Tint Renkleri */
             --stat-str-tint: rgba(255, 87, 51, 0.1);
+            --stat-con-tint: rgba(0, 128, 128, 0.1); /* Yeni Dayanıklılık tint rengi */
             --stat-bilgelik-tint: rgba(106, 5, 114, 0.1); 
             --stat-dex-tint: rgba(0, 128, 0, 0.1);
             --stat-int-tint: rgba(0, 123, 255, 0.1);
@@ -56,11 +58,13 @@
             --dice-border: #555;
             color: var(--text-color);
             --stat-str: #e95151; 
+            --stat-con: #40e0d0; /* Yeni Dayanıklılık rengi (Koyu Mod) */
             --stat-bilgelik: #c175c9;
             --stat-dex: #77dd77;
             --stat-int: #4da6ff;
             --stat-cha: #fff380;
             --stat-str-tint: rgba(233, 81, 81, 0.15);
+            --stat-con-tint: rgba(64, 224, 208, 0.15); /* Yeni Dayanıklılık tint rengi (Koyu Mod) */
             --stat-bilgelik-tint: rgba(193, 117, 201, 0.15);
             --stat-dex-tint: rgba(119, 221, 119, 0.15);
             --stat-int-tint: rgba(77, 166, 255, 0.15);
@@ -92,10 +96,12 @@
         .stat-group.basic-info .stat-item { flex: 1 1 150px; min-width: 120px; padding: 0; border: none; }
         .stat-group.basic-info .stat-item input, .stat-group.basic-info .stat-item select { margin-bottom: 5px; }
         .stat-group.basic-info .full-width { flex: 1 1 100%; padding: 0; border: none; }
+        /* 6 istatistik için 3'lü kolon stili güncellenmedi, otomatik dağılım kullanılıyor. */
         .stat-group.three-col .stat-item { flex: 1 1 calc(33.33% - 20px); min-width: 150px; padding: 10px; border: 1px solid var(--divider-color); }
 
         /* RENK STİLLERİ */
-        .stat-item.fiziksel_guc { border-left: 5px solid var(--stat-str); background-color: var(--stat-str-tint); } 
+        .stat-item.fiziksel_guc { border-left: 5px solid var(--stat-str); background-color: var(--stat-str-tint); }
+        .stat-item.dayaniklilik { border-left: 5px solid var(--stat-con); background-color: var(--stat-con-tint); } /* Yeni Dayanıklılık stili */
         .stat-item.bilgelik { border-left: 5px solid var(--stat-bilgelik); background-color: var(--stat-bilgelik-tint); } 
         .stat-item.ceviklik { border-left: 5px solid var(--stat-dex); background-color: var(--stat-dex-tint); } 
         .stat-item.zeka { border-left: 5px solid var(--stat-int); background-color: var(--stat-int-tint); } 
@@ -270,7 +276,14 @@
                 <div class="bonus-input-container"><input type="text" id="fiziksel_guc_bonus" name="fiziksel_guc_bonus" placeholder="+0" readonly class="calculated-bonus"><label for="fiziksel_guc_bonus">Bonus</label></div>
             </div>
         </div>
-        
+
+        <div class="stat-item dayaniklilik">
+            <label>DAYANIKLILIK<span id="dayaniklilik_race_bonus" class="race-bonus-text" onclick="applyRaceBonus('dayaniklilik')"></span></label>
+            <div class="value-bonus-group">
+                <div class="value-input-container"><input type="text" id="dayaniklilik_val" name="dayaniklilik_val" placeholder="Temel Puan" oninput="calculateBonus('dayaniklilik');" value="10"><label for="dayaniklilik_val">Değer</label></div>
+                <div class="bonus-input-container"><input type="text" id="dayaniklilik_bonus" name="dayaniklilik_bonus" placeholder="+0" readonly class="calculated-bonus"><label for="dayaniklilik_bonus">Bonus</label></div>
+            </div>
+        </div>
         <div class="stat-item bilgelik">
             <label>BİLGELİK<span id="bilgelik_race_bonus" class="race-bonus-text" onclick="applyRaceBonus('bilgelik')"></span></label>
             <div class="value-bonus-group">
@@ -302,17 +315,13 @@
                 <div class="bonus-input-container"><input type="text" id="karizma_bonus" name="karizma_bonus" placeholder="+0" readonly class="calculated-bonus"><label for="karizma_bonus">Bonus</label></div>
             </div>
         </div>
-        
-        <div class="stat-item">
-            <label for="kritik">KRİTİK</label>
-            <input type="text" id="kritik" name="kritik">
-        </div>
     </div>
     
     <div class="dice-roller">
         <h3>Zar Atma Alanı (D20)</h3>
         <p>Beceri testleri için 20 yüzlü zarı atın!</p>
         <button id="rollButton">D20 ZAR AT</button>
+        <button id="baseAttackButton" style="background-color: #dc3545; color: white;">TEMEL SALDIRI (3d6 + Stat Bonus)</button>
         <div id="diceResult">---</div>
     </div>
     
@@ -381,33 +390,34 @@
     };
 
     const RACE_STAT_BONUSES = {
-        "İnsan": { stats: { 'fiziksel_guc': 1, 'bilgelik': 1, 'ceviklik': 1, 'zeka': 1, 'karizma': 1 }, ac: 0, hp: 0 },
+        "İnsan": { stats: { 'fiziksel_guc': 1, 'dayaniklilik': 1, 'bilgelik': 1, 'ceviklik': 1, 'zeka': 1, 'karizma': 1 }, ac: 0, hp: 0 },
         "Elf": { stats: { 'ceviklik': 2, 'zeka': 1 }, ac: 0, hp: 0 },
-        "Cüce": { hp: 5, ac: 1, stats: { 'fiziksel_guc': 2, 'bilgelik': 1 }, ac: 1, hp: 5 },
+        "Cüce": { hp: 5, ac: 1, stats: { 'fiziksel_guc': 2, 'dayaniklilik': 2, 'bilgelik': 1 }, ac: 1, hp: 5 }, // Dayanıklılık eklendi
         "Yarı-Elf": { stats: { 'karizma': 2 } }, 
         "Ejderha Soyu": { stats: { 'fiziksel_guc': 2, 'karizma': 1 }, ac: 0, hp: 5 },
-        "Yarı-Ork": { stats: { 'fiziksel_guc': 2, 'bilgelik': 1 }, ac: 0, hp: 10 },
+        "Yarı-Ork": { stats: { 'fiziksel_guc': 2, 'dayaniklilik': 1, 'bilgelik': 1 }, ac: 0, hp: 10 }, // Dayanıklılık eklendi
         "Gnome": { stats: { 'zeka': 2, 'ceviklik': 1 }, ac: 0, hp: 0 },
         "Buçukluk": { stats: { 'ceviklik': 2, 'karizma': 1 }, ac: 0, hp: 0 },
         "Tiefling": { stats: { 'zeka': 1, 'karizma': 2 }, ac: 0, hp: 0 }
     };
     
+    // SÖZDİZİMİ HATASI GİDERİLDİ
     const CLASS_PRIORITIES = {
-        "Fighter (Savaşçı)": ["FİZİKSEL GÜÇ", "ÇEVİKLİK"],
-        "Wizard (Büyücü)": ["ZEKA"],
-        "Cleric (Ruhban)": ["BİLGELİK"], 
-        "Rogue (Hırsız)": ["ÇEVİKLİK"],
-        "Sorcerer (Büyücü)": ["KARİZMA"],
-        "Bard (Ozan)": ["KARİZMA"],
-        "Paladin (Paladin)": ["FİZİKSEL GÜÇ", "KARİZMA"],
-        "Ranger (Bekçi)": ["ÇEVİKLİK"],
-        "Barbarian (Barbar)": ["FİZİKSEL GÜÇ"],
-        "Monk (Keşiş)": ["ÇEVİKLİK", "BİLGELİK"], 
-        "Warlock (Büyücü)": ["KARİZMA"],
-        "Druid (Druid)": ["BİLGELİK"]
+        "Barbarian (Barbar)": "fiziksel_guc", 
+        "Fighter (Savaşçı)": "fiziksel_guc", 
+        "Paladin (Paladin)": "karizma", 
+        "Cleric (Ruhban)": "bilgelik", 
+        "Monk (Keşiş)": "ceviklik",
+        "Ranger (Bekçi)": "ceviklik", 
+        "Rogue (Hırsız)": "ceviklik", 
+        "Bard (Ozan)": "karizma", 
+        "Druid (Druid)": "bilgelik", 
+        "Warlock (Büyücü)": "karizma", 
+        "Sorcerer (Büyücü)": "karizma", 
+        "Wizard (Büyücü)": "zeka" 
     };
 
-    const ALL_STATS_KEYS = ['fiziksel_guc', 'bilgelik', 'ceviklik', 'zeka', 'karizma'];
+    const ALL_STATS_KEYS = ['fiziksel_guc', 'dayaniklilik', 'bilgelik', 'ceviklik', 'zeka', 'karizma']; 
     
     // ÇOKLU KAYIT İÇİN YENİ ANAHTARLAR
     const LOCAL_STORAGE_KEY = 'frp_character_list'; 
@@ -698,20 +708,22 @@
     function addPriorityStars(priorities) {
         clearPriorityStars(); 
 
-        const STAT_MAP = {
-            "FİZİKSEL GÜÇ": "FİZİKSEL GÜÇ", "BİLGELİK": "BİLGELİK", "ÇEVİKLİK": "ÇEVİKLİK", 
-            "ZEKA": "ZEKA", "KARİZMA": "KARİZMA"
-        };
-        
-        priorities.forEach(stat => {
-            const statText = STAT_MAP[stat];
-            if (!statText) return;
-
+        // Birincil istatistikleri işaretle
+        priorities.forEach(statName => {
+            // statName örneğin: "FİZİKSEL GÜÇ"
             const allLabels = document.querySelectorAll('.stat-group.three-col label');
             allLabels.forEach(label => {
-                const labelText = Array.from(label.childNodes).find(node => node.nodeType === 3 && node.textContent.trim() === statText)?.textContent.trim();
+                // Label içeriğini al (span hariç)
+                let labelContent = '';
+                Array.from(label.childNodes).forEach(node => {
+                    if (node.nodeType === 3) { // Text node
+                        labelContent += node.textContent;
+                    }
+                });
+                labelContent = labelContent.trim();
                 
-                if (labelText === statText) {
+                // Eğer label'ın içeriği statName ile eşleşiyorsa yıldız ekle
+                if (labelContent === statName) {
                     if (!label.querySelector('.priority-star')) {
                         const star = document.createElement('span');
                         star.textContent = ' *';
@@ -805,6 +817,7 @@
             hpBonus = RACE_STAT_BONUSES[selectedRace].hp || 0;
             acBonus = RACE_STAT_BONUSES[selectedRace].ac || 0;
             
+            // Irk HP bonusu ekle
             maxHP += hpBonus;
             baseAC += acBonus;
         }
@@ -832,7 +845,17 @@
         updateHPBar(finalCurrentHP, maxHP);
 
         if (selectedClass && CLASS_PRIORITIES[selectedClass]) {
-            addPriorityStars(CLASS_PRIORITIES[selectedClass]);
+            // Stat anahtarını Türkçe ada çevir
+            const STAT_NAME_MAP = {
+                "fiziksel_guc": "FİZİKSEL GÜÇ",
+                "dayaniklilik": "DAYANIKLILIK",
+                "bilgelik": "BİLGELİK",
+                "ceviklik": "ÇEVİKLİK",
+                "zeka": "ZEKA",
+                "karizma": "KARİZMA"
+            };
+            const primaryStatName = STAT_NAME_MAP[CLASS_PRIORITIES[selectedClass]];
+            addPriorityStars([primaryStatName]);
         } else {
             clearPriorityStars();
         }
@@ -874,7 +897,8 @@
         
         modalResult.classList.add('modal-rolling');
         modalResult.textContent = 'Zar Atılıyor...';
-        modalResult.style.color = 'white'; 
+        modalResult.style.color = 'white';
+        modalResult.style.backgroundColor = 'transparent';
 
         const animationInterval = setInterval(() => {
             modalResult.textContent = Math.floor(Math.random() * 20) + 1;
@@ -888,7 +912,18 @@
             
             modalResult.classList.remove('modal-rolling');
 
-            let breakdown = `(Zar: ${d20Roll} ${bonus >= 0 ? '+' : ''}${bonus})`;
+            // STAT_MAP'i bu fonksiyonda manuel olarak tekrar tanımlıyoruz
+            const STAT_MAP_REVERSE = {
+                "fiziksel_guc": "FİZİKSEL GÜÇ", 
+                "dayaniklilik": "DAYANIKLILIK", 
+                "bilgelik": "BİLGELİK", 
+                "ceviklik": "ÇEVİKLİK", 
+                "zeka": "ZEKA", 
+                "karizma": "KARİZMA"
+            };
+            const statNameTR = STAT_MAP_REVERSE[statKey];
+
+            let breakdown = `(Zar: ${d20Roll} ${bonus >= 0 ? '+' : ''}${bonus} ${statNameTR} Bonusu)`;
             modalTitle.textContent = `${skillName}: ${breakdown}`;
 
             if (d20Roll === 20) {
@@ -903,6 +938,79 @@
             }
 
             document.getElementById('diceResult').textContent = `Son Yetenek Kontrolü: ${totalResult}`;
+
+        }, rollDuration); 
+    }
+    
+    function rollBaseAttack() {
+        const selectedClass = document.getElementById('sinif').value;
+        
+        if (!selectedClass || selectedClass === "") {
+            alert("Lütfen önce karakterin sınıfını seçin.");
+            return;
+        }
+
+        // CLASS_PRIORITIES'teki değer artık direkt stat anahtarı
+        const primaryStatKey = CLASS_PRIORITIES[selectedClass];
+
+        if (!primaryStatKey) {
+            alert("Seçilen sınıf için tanımlanmış bir Birincil İstatistik bulunamadı.");
+            return;
+        }
+
+        // Stat anahtarını Türkçe ada çevir
+        const STAT_NAME_MAP = {
+            "fiziksel_guc": "FİZİKSEL GÜÇ",
+            "dayaniklilik": "DAYANIKLILIK",
+            "bilgelik": "BİLGELİK",
+            "ceviklik": "ÇEVİKLİK",
+            "zeka": "ZEKA",
+            "karizma": "KARİZMA"
+        };
+        const primaryStatTR = STAT_NAME_MAP[primaryStatKey];
+
+        const bonusInput = document.getElementById(primaryStatKey + '_bonus');
+        const statBonus = parseInt(bonusInput ? bonusInput.value : 0) || 0;
+        
+        const modal = document.getElementById('rollModal');
+        const modalResult = document.getElementById('modalResult');
+        const modalTitle = document.getElementById('modalTitle');
+        const rollDuration = 1000; 
+        
+        // Zar atma öncesinde hesapla
+        const d6Rolls = [];
+        for (let i = 0; i < 3; i++) {
+            d6Rolls.push(Math.floor(Math.random() * 6) + 1);
+        }
+        const totalRoll = d6Rolls.reduce((a, b) => a + b, 0);
+        const totalDamage = totalRoll + statBonus;
+        
+        modal.style.display = 'flex';
+        modalTitle.textContent = `Temel Saldırı (3D6 + ${primaryStatTR})`;
+        
+        modalResult.classList.add('modal-rolling');
+        modalResult.textContent = 'Hasar Hesaplanıyor...';
+        modalResult.style.color = 'white';
+        modalResult.style.backgroundColor = 'transparent';
+
+        const animationInterval = setInterval(() => {
+            // Animasyon sırasında rastgele toplam göster
+            modalResult.textContent = Math.floor(Math.random() * 18) + 1 + statBonus;
+        }, 50); 
+
+        setTimeout(() => {
+            clearInterval(animationInterval); 
+            
+            modalResult.classList.remove('modal-rolling');
+
+            const breakdown = `(${d6Rolls.join(' + ')} Zar + ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} Bonusu)`;
+            
+            modalTitle.textContent = `Temel Hasar: ${breakdown}`;
+            modalResult.textContent = totalDamage;
+            modalResult.style.color = '#fffae6'; 
+            modalResult.style.backgroundColor = '#d93025'; 
+            
+            document.getElementById('diceResult').textContent = `Son Saldırı Hasarı: ${totalDamage}`;
 
         }, rollDuration); 
     }
@@ -979,7 +1087,8 @@
         
         modalResult.classList.add('modal-rolling');
         modalResult.textContent = 'Zar Atılıyor...';
-        modalResult.style.color = 'white'; 
+        modalResult.style.color = 'white';
+        modalResult.style.backgroundColor = 'transparent';
 
         const animationInterval = setInterval(() => {
             modalResult.textContent = Math.floor(Math.random() * 20) + 1;
@@ -1002,10 +1111,13 @@
                 modalResult.style.color = 'white'; 
                 modalResult.textContent = result;
             }
+            modalResult.style.backgroundColor = 'transparent';
              document.getElementById('diceResult').textContent = `Son D20 Atışı: ${result}`;
 
         }, rollDuration); 
     });
+
+    document.getElementById('baseAttackButton').addEventListener('click', rollBaseAttack); // YENİ EKLENEN BUTON EVENTI
 
     document.getElementById('rollModal').addEventListener('click', function(event) {
         if (event.target.id === 'rollModal' || event.target.id === 'modalResult') {
