@@ -163,7 +163,7 @@
             font-size: 0.8em;
         }
         .ability-slot-panel {
-            width: min(260px, 100%);
+            width: min(360px, 100%);
         }
         .skills-header-text h3 {
             margin: 0;
@@ -187,28 +187,82 @@
             gap: 10px;
         }
         .ability-slot {
-            border: 1px solid var(--divider-color);
+            border: none;
             border-radius: 6px;
-            padding: 10px;
-            background-color: var(--bg-secondary);
+            padding: 6px 4px;
+            background: transparent;
             display: flex;
             align-items: center;
             gap: 12px;
-            justify-content: space-between;
+            justify-content: flex-start;
             cursor: pointer;
             user-select: none;
         }
-        .ability-slot-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            font-size: 0.95em;
-        }
-        .ability-slot-label input[type="checkbox"] {
+
+        /* Small square checkbox on the left */
+        .ability-slot input[type="checkbox"] {
             width: 18px;
             height: 18px;
-            accent-color: var(--main-header-color);
+            margin: 0 8px 0 6px;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 4px;
+            background: rgba(255,255,255,0.02);
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .ability-slot input[type="checkbox"]:checked {
+            background: var(--main-header-color);
+            border-color: var(--main-header-color);
+        }
+
+        /* Dark rounded label box on the right (fills remaining width) */
+        .ability-slot-label {
+            display: block;
+            flex: 1 1 auto;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95em;
+            text-align: left;
+        }
+
+        /* Light-mode variant: lighter label box */
+        body:not(.dark-mode) .ability-slot input[type="checkbox"] {
+            border-color: #333;
+            background: #fff;
+            position: relative;
+            box-shadow: none;
+        }
+        /* Draw a small white check mark when checked (works with custom appearance) */
+        .ability-slot input[type="checkbox"]::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 2px;
+            width: 8px;
+            height: 6px;
+            transform: rotate(45deg) scale(0.9);
+            border-bottom: 2px solid transparent;
+            border-left: 2px solid transparent;
+            pointer-events: none;
+            opacity: 0;
+        }
+        body:not(.dark-mode) .ability-slot input[type="checkbox"]:checked {
+            background: var(--main-header-color);
+            border-color: var(--main-header-color);
+        }
+        body:not(.dark-mode) .ability-slot input[type="checkbox"]:checked::after {
+            border-color: #fff;
+            opacity: 1;
+        }
+        body:not(.dark-mode) .ability-slot-label {
+            background: #f0f0f0;
+            color: var(--text-color);
+            border: 1px solid var(--divider-color);
         }
         .ability-pool-input {
             width: 100%;
@@ -564,10 +618,10 @@
     const RACE_STAT_BONUSES = {
         "İnsan": { stats: { 'fiziksel_guc': 1, 'dayaniklilik': 1, 'bilgelik': 1, 'ceviklik': 1, 'zeka': 1, 'karizma': 1 }, ac: 0, hp: 0 },
         "Elf": { stats: { 'ceviklik': 2, 'zeka': 1 }, ac: 0, hp: 0 },
-        "Cüce": { hp: 5, ac: 1, stats: { 'fiziksel_guc': 2, 'dayaniklilik': 2, 'bilgelik': 1 }, ac: 1, hp: 5 }, // Dayanıklılık eklendi
-        "Yarı-Elf": { stats: { 'karizma': 2 } }, 
+        "Cüce": { stats: { 'fiziksel_guc': 1, 'dayaniklilik': 2 }, ac: 1, hp: 5 },
+        "Yarı-Elf": { stats: { 'karizma': 2, 'bilgelik': 1 } }, 
         "Ejderha Soyu": { stats: { 'fiziksel_guc': 2, 'karizma': 1 }, ac: 0, hp: 5 },
-        "Yarı-Ork": { stats: { 'fiziksel_guc': 2, 'dayaniklilik': 1, 'bilgelik': 1 }, ac: 0, hp: 10 }, // Dayanıklılık eklendi
+        "Yarı-Ork": { stats: { 'fiziksel_guc': 2, 'dayaniklilik': 1 }, ac: 0, hp: 10 }, // Dayanıklılık eklendi
         "Gnome": { stats: { 'zeka': 2, 'ceviklik': 1 }, ac: 0, hp: 0 },
         "Buçukluk": { stats: { 'ceviklik': 2, 'karizma': 1 }, ac: 0, hp: 0 },
         "Tiefling": { stats: { 'zeka': 1, 'karizma': 2 }, ac: 0, hp: 0 }
@@ -592,11 +646,11 @@
     const ALL_STATS_KEYS = ['fiziksel_guc', 'dayaniklilik', 'bilgelik', 'ceviklik', 'zeka', 'karizma']; 
 
     const RANK_SETTINGS = {
-        bronz: { label: 'Bronz', diceBonus: 0, abilitySlots: 2 },
-        gumus: { label: 'Gümüş', diceBonus: 1, abilitySlots: 3 },
-        altin: { label: 'Altın', diceBonus: 2, abilitySlots: 4 },
-        elmas: { label: 'Elmas', diceBonus: 3, abilitySlots: 5 },
-        platin: { label: 'Platin', diceBonus: 4, abilitySlots: 6 }
+        bronz: { label: 'Bronz', diceBonus: 0, hpBonus: 0, abilitySlots: 2 },
+        gumus: { label: 'Gümüş', diceBonus: 1, hpBonus: 20, abilitySlots: 3 },
+        altin: { label: 'Altın', diceBonus: 2, hpBonus: 40, abilitySlots: 4 },
+        elmas: { label: 'Elmas', diceBonus: 3, hpBonus: 50, abilitySlots: 5 },
+        platin: { label: 'Platin', diceBonus: 4, hpBonus: 40, abilitySlots: 6 }
     };
     const DEFAULT_RANK_KEY = 'bronz';
     
@@ -934,7 +988,7 @@
         const config = getRankConfig(rankValue);
         const bonusLabel = document.getElementById('rankDiceBonusLabel');
         if (bonusLabel) {
-            bonusLabel.textContent = `${config.label} rütbesi tüm zaralara +${config.diceBonus} bonus verir ve ${config.abilitySlots} yetenek slotu sunar.`;
+            bonusLabel.textContent = `${config.label} rütbesi tüm zaralara +${config.diceBonus} bonus verir, karaktere +${config.hpBonus} HP ekler ve ${config.abilitySlots} yetenek slotu sunar.`;
         }
         updateAbilityPoolSlots(config.abilitySlots);
         updateAbilityTextAreaRows(config.abilitySlots);
@@ -1095,6 +1149,17 @@
             maxHP += hpBonus;
             baseAC += acBonus;
         }
+
+        // Rütbe kaynaklı HP bonusu (Bronz: +0, sonraki her rütbe +10 HP)
+        const rankValue = document.getElementById('rutbe')?.value;
+        const rankHpBonus = getRankConfig(rankValue).hpBonus || 0;
+        maxHP += rankHpBonus;
+
+        // Dayanıklılık (Con) modifikatorü başına +10 HP ekle
+        const conVal = parseInt(document.getElementById('dayaniklilik_val')?.value) || 0;
+        const conMod = Math.floor((conVal - 10) / 2);
+        const hpFromCon = conMod * 10;
+        maxHP += hpFromCon;
         
         let finalCurrentHP = 0;
         if (maxHP > 0) {
@@ -1400,7 +1465,8 @@
     document.getElementById('longRestButton').addEventListener('click', () => updateHP(0, 'longRest'));
     const rankSelect = document.getElementById('rutbe');
     if (rankSelect) {
-        rankSelect.addEventListener('change', updateRankDependentFields);
+        // When rank changes, update dependent fields AND recalculate the character sheet (HP etc.)
+        rankSelect.addEventListener('change', function() { updateRankDependentFields(); updateCharacterSheet(); });
     }
 
     document.getElementById('rollButton').addEventListener('click', function() {
