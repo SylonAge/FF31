@@ -407,7 +407,7 @@
         <div class="stat-item"><label for="yas">YAŞ</label><input type="text" id="yas" name="yas"></div>
         <div class="stat-item">
             <label for="rutbe">RÜTBE</label>
-            <select id="rutbe" name="rutbe">
+            <select id="rutbe" name="rutbe" onchange="updateCharacterSheet()">
                 <option value="bronz" selected>Bronz</option>
                 <option value="gumus">Gümüş</option>
                 <option value="altin">Altın</option>
@@ -460,7 +460,7 @@
         <div class="stat-item dayaniklilik">
             <label>DAYANIKLILIK<span id="dayaniklilik_race_bonus" class="race-bonus-text" onclick="applyRaceBonus('dayaniklilik')"></span></label>
             <div class="value-bonus-group">
-                <div class="value-input-container"><input type="text" id="dayaniklilik_val" name="dayaniklilik_val" placeholder="Temel Puan" oninput="calculateBonus('dayaniklilik');" value="10"><label for="dayaniklilik_val">Değer</label></div>
+                <div class="value-input-container"><input type="text" id="dayaniklilik_val" name="dayaniklilik_val" placeholder="Temel Puan" oninput="calculateBonus('dayaniklilik'); updateCharacterSheet();" value="10"><label for="dayaniklilik_val">Değer</label></div>
                 <div class="bonus-input-container"><input type="text" id="dayaniklilik_bonus" name="dayaniklilik_bonus" placeholder="+0" readonly class="calculated-bonus"><label for="dayaniklilik_bonus">Bonus</label></div>
             </div>
         </div>
@@ -583,7 +583,7 @@
                 </div>
                 <div class="ability-slot-panel">
                     <div class="skills-header-text">
-                        <h3>Büyü Slotları</h3>
+                        <h3>Yetenek/Büyü Slotları</h3>
                         <p class="rank-bonus-text" id="rankDiceBonusLabel">Bronz rütbesi tüm zaralara +0 bonus verir ve 1 yetenek slotu sunar.</p>
                     </div>
                     <div id="abilityPoolSlots" class="ability-pool-slots"></div>
@@ -1158,7 +1158,7 @@
         // Dayanıklılık (Con) modifikatorü başına +10 HP ekle
         const conVal = parseInt(document.getElementById('dayaniklilik_val')?.value) || 0;
         const conMod = Math.floor((conVal - 10) / 2);
-        const hpFromCon = conMod * 10;
+        const hpFromCon =Math.max(0, conMod * 10);
         maxHP += hpFromCon;
         
         let finalCurrentHP = 0;
@@ -1327,7 +1327,7 @@
             d6Rolls.push(Math.floor(Math.random() * 6) + 1);
         }
         const totalRoll = d6Rolls.reduce((a, b) => a + b, 0);
-        const totalDamage = totalRoll + statBonus + rankBonus;
+        const totalDamage = totalRoll + statBonus;
         
         modal.style.display = 'flex';
         modalTitle.textContent = `Temel Saldırı (3D6 + ${primaryStatTR})`;
@@ -1339,7 +1339,7 @@
 
         const animationInterval = setInterval(() => {
             // Animasyon sırasında rastgele toplam göster
-        modalResult.textContent = Math.floor(Math.random() * 18) + 1 + statBonus + rankBonus;
+        modalResult.textContent = Math.floor(Math.random() * 18) + 1 + statBonus ;
         }, 50); 
 
         setTimeout(() => {
@@ -1347,7 +1347,7 @@
             
             modalResult.classList.remove('modal-rolling');
 
-            const breakdown = `(${d6Rolls.join(' + ')} Zar + ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} Bonusu ${rankBonus >= 0 ? '+' : ''}${rankBonus} Rütbe Bonusu)`;
+            const breakdown = `(${d6Rolls.join(' + ')} Zar  ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} BONUSU)`;
             
             modalTitle.textContent = `Temel Hasar: ${breakdown}`;
             modalResult.textContent = totalDamage;
@@ -1496,7 +1496,7 @@
             const rankBonusLabel = rankBonus >= 0 ? `+${rankBonus}` : `${rankBonus}`;
             
             modalResult.classList.remove('modal-rolling');
-            modalTitle.textContent = `Düz D20 Sonucu (Zar: ${result} ${rankBonusLabel} Rütbe Bonusu)`;
+            modalTitle.textContent = `D20 Sonucu (Zar: ${result} ${rankBonusLabel} Rütbe Bonusu)`;
             
             if (result === 20) {
                 modalResult.style.color = '#76ff03';
@@ -1522,7 +1522,7 @@
         btn.addEventListener('click', () => rollMultipleDice(sides));
     });
 
-    document.getElementById('baseAttackButton').addEventListener('click', rollBaseAttack); // YENİ EKLENEN BUTON EVENTI
+    document.getElementById('baseAttackButton').addEventListener('click', rollBaseAttack); 
 
     document.getElementById('rollModal').addEventListener('click', function(event) {
         if (event.target.id === 'rollModal' || event.target.id === 'modalResult') {
