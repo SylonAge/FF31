@@ -37,11 +37,7 @@
             justify-content: space-between;
         }
 
-        .nav-left {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+
 
         .nav-right {
             display: flex;
@@ -104,79 +100,6 @@
         #sinif-iframe {
             background: #fff;
         }
-
-        /* Şifre Modal Stili */
-        .password-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .password-modal.active {
-            display: flex;
-        }
-
-        .password-box {
-            background: var(--panel-bg);
-            padding: 30px;
-            border-radius: 10px;
-            border: 2px solid var(--accent);
-            min-width: 300px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-        }
-
-        .password-box h3 {
-            color: var(--accent);
-            margin-top: 0;
-            text-align: center;
-        }
-
-        .password-box input {
-            width: 100%;
-            padding: 10px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: var(--text);
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        .password-box input::placeholder {
-            color: #888;
-        }
-
-        .password-box button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 15px;
-            background: var(--accent);
-            border: none;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .password-box button:hover {
-            background: #0056cc;
-        }
-
-        .password-error {
-            color: #ff6b6b;
-            font-size: 12px;
-            margin-top: 10px;
-            display: none;
-            text-align: center;
-        }
     </style>
 </head>
 
@@ -186,25 +109,15 @@
         <div>
             <div class="brand">SYLONAGE Hub</div>
         </div>
-        <div class="nav-left">
+        <div class="nav-right">
             <button class="nav-btn active" onclick="openTab('char', this)">👤 Karakter Kağıdı</button>
             <button class="nav-btn" onclick="openTab('guide', this)">📜 Sınıf Kılavuzu</button>
-        </div>
-        <div class="nav-right">
-            <button class="nav-btn" onclick="requestPassword('gm', this)">🎭 GM Kontrol</button>
-            <button class="nav-btn" onclick="requestPassword('map', this)">⚔️ Savaş Haritası</button>
+            <button class="nav-btn" onclick="openTab('gm', this)">🎭 GM Kontrol</button>
+            <button class="nav-btn" onclick="openTab('map', this)">⚔️ Savaş Haritası</button>
         </div>
     </div>
 
-    <div class="password-modal" id="passwordModal">
-        <div class="password-box">
-            <h3>Admin Password?</h3>
-            <input type="password" id="passwordInput" placeholder="Şifreyi girin..."
-                onkeypress="if(event.key==='Enter') submitPassword()">
-            <button onclick="submitPassword()">Giriş Yap</button>
-            <div class="password-error" id="passwordError">❌ Hatalı şifre!</div>
-        </div>
-    </div>
+
 
     <div class="content-area">
         <iframe src="karakter-sayfasi.html" id="char-iframe" class="active"></iframe>
@@ -214,39 +127,7 @@
     </div>
 
     <script>
-        const ADMIN_PASSWORD = 'purna31';
-        let pendingTab = null;
-        let pendingBtn = null;
 
-        function requestPassword(tabId, btn) {
-            // localStorage'da şifre kontrol et
-            if (localStorage.getItem('adminAuthenticated') === 'true') {
-                openTab(tabId, btn);
-                return;
-            }
-
-            pendingTab = tabId;
-            pendingBtn = btn;
-            document.getElementById('passwordModal').classList.add('active');
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('passwordError').style.display = 'none';
-            document.getElementById('passwordInput').focus();
-        }
-
-        function submitPassword() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === ADMIN_PASSWORD) {
-                // Şifreyi localStorage'da sakla
-                localStorage.setItem('adminAuthenticated', 'true');
-                document.getElementById('passwordModal').classList.remove('active');
-                openTab(pendingTab, pendingBtn);
-                pendingTab = null;
-                pendingBtn = null;
-            } else {
-                document.getElementById('passwordError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-            }
-        }
 
         function openTab(tabId, btn) {
             // Tüm iframe'leri gizle
@@ -259,14 +140,7 @@
             btn.classList.add('active');
         }
 
-        // Modal dışına tıklandığında kapat
-        document.getElementById('passwordModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                this.classList.remove('active');
-                pendingTab = null;
-                pendingBtn = null;
-            }
-        });
+
     </script>
 
 </body>
