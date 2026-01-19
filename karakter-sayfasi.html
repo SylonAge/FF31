@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karakter Yönetimi Sistemi</title>
+    <style>
+        /* TEMEL STİLLER */
+        :root {
+            --bg-primary: #f4f4f4;
+            --bg-secondary: #fff;
+            --text-color: #333;
+            --header-bg: #e9e9e9;
+            --header-color: #555;
+            --main-header-color: #007bff;
+            --divider-color: #ccc;
+            --dice-bg: #f0f0f0;
+            --dice-border: #ccc;
+
+            /* İstatistik Renkleri */
+            --stat-str: #ff5733;
+            --stat-con: #008080;
+            /* Yeni Dayanıklılık rengi */
+            --stat-bilgelik: #6a0572;
+            --stat-dex: #008000;
+            --stat-int: #007bff;
+            --stat-cha: #ffd700;
+
+            /* İstatistik Tint Renkleri */
+            --stat-str-tint: rgba(255, 87, 51, 0.1);
+            --stat-con-tint: rgba(0, 128, 128, 0.1);
+            /* Yeni Dayanıklılık tint rengi */
+            --stat-bilgelik-tint: rgba(106, 5, 114, 0.1);
+            --stat-dex-tint: rgba(0, 128, 0, 0.1);
+            --stat-int-tint: rgba(0, 123, 255, 0.1);
+            --stat-cha-tint: rgba(255, 215, 0, 0.1);
+
+            /* HP/AC Renkleri */
+            --hp-color: #28a745;
+            --ac-color: #17a2b8;
+
+            /* KAYIT/YÜKLE BUTONLARI İÇİN RENKLER */
+            --save-button-bg: #28a745;
+            --load-button-bg: #ffc107;
+            --reset-button-bg: #dc3545;
+            --main-menu-bg: #6c757d;
+            --button-text-color: #fff;
+        }
+
+        /* GECE MODU */
+        body.dark-mode {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-color: #e0e0e0;
+            --header-bg: #2a2a2a;
+            --header-color: #bbbbbb;
+            --main-header-color: #4da6ff;
+            --divider-color: #333;
+            --dice-bg: #222;
+            --dice-border: #555;
+            color: var(--text-color);
+            --stat-str: #e95151;
+            --stat-con: #40e0d0;
+            /* Yeni Dayanıklılık rengi (Koyu Mod) */
+            --stat-bilgelik: #c175c9;
+            --stat-dex: #77dd77;
+            --stat-int: #4da6ff;
+            --stat-cha: #fff380;
+            --stat-str-tint: rgba(233, 81, 81, 0.15);
+            --stat-con-tint: rgba(64, 224, 208, 0.15);
+            /* Yeni Dayanıklılık tint rengi (Koyu Mod) */
+            --stat-bilgelik-tint: rgba(193, 117, 201, 0.15);
+            --stat-dex-tint: rgba(119, 221, 119, 0.15);
+            --stat-int-tint: rgba(77, 166, 255, 0.15);
+            --stat-cha-tint: rgba(255, 243, 128, 0.15);
+            --save-button-bg: #1e7e34;
+            --load-button-bg: #d39e00;
+            --reset-button-bg: #c82333;
+            --main-menu-bg: #495057;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-primary);
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--main-header-color);
+            border-bottom: 2px solid var(--divider-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            background-color: var(--header-bg);
+            padding: 8px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: var(--header-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        /* GENEL INPUT VE TEXTAREA STİLLERİ */
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        /* GRUPLAMA STİLLERİ */
+        .stat-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            flex: 1 1 calc(50% - 20px);
+            min-width: 200px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--divider-color);
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .stat-group.basic-info {
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-group.basic-info .stat-item {
+            flex: 1 1 150px;
+            min-width: 120px;
+            padding: 0;
+            border: none;
+        }
+
+        .stat-group.basic-info .stat-item input,
+        .stat-group.basic-info .stat-item select {
+            margin-bottom: 5px;
+        }
+
+        .stat-group.basic-info .full-width {
+            flex: 1 1 100%;
+            padding: 0;
+            border: none;
+        }
+
+        /* 6 istatistik için 3'lü kolon stili güncellenmedi, otomatik dağılım kullanılıyor. */
+        .stat-group.three-col .stat-item {
+            flex: 1 1 calc(33.33% - 20px);
+            min-width: 150px;
+            padding: 10px;
+            border: 1px solid var(--divider-color);
+        }
+
+        /* RENK STİLLERİ */
+        .stat-item.fiziksel_guc {
+            border-left: 5px solid var(--stat-str);
+            background-color: var(--stat-str-tint);
+        }
+
+        .stat-item.dayaniklilik {
+            border-left: 5px solid var(--stat-con);
+            background-color: var(--stat-con-tint);
+        }
+
+        /* Yeni Dayanıklılık stili */
+        .stat-item.bilgelik {
+            border-left: 5px solid var(--stat-bilgelik);
+            background-color: var(--stat-bilgelik-tint);
+        }
+
+        .stat-item.ceviklik {
+            border-left: 5px solid var(--stat-dex);
+            background-color: var(--stat-dex-tint);
+        }
+
+        .stat-item.zeka {
+            border-left: 5px solid var(--stat-int);
+            background-color: var(--stat-int-tint);
+        }
+
+        .stat-item.karizma {
+            border-left: 5px solid var(--stat-cha);
+            background-color: var(--stat-cha-tint);
+        }
+
+        .stat-item.hp-box {
+            border-left: 5px solid var(--hp-color);
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .stat-item.ac-box {
+            border-left: 5px solid var(--ac-color);
+            background-color: rgba(23, 162, 184, 0.1);
+        }
+
+        body.dark-mode .stat-item.hp-box {
+            background-color: rgba(40, 167, 69, 0.2);
+        }
+
+        body.dark-mode .stat-item.ac-box {
+            background-color: rgba(23, 162, 184, 0.2);
+        }
+
+        .race-bonus-text {
+            font-size: 0.8em;
+            color: var(--main-header-color);
+            font-weight: normal;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .race-bonus-text:hover {
+            text-decoration: underline;
+        }
+
+        .value-bonus-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .value-input-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bonus-input-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .value-bonus-group input {
+            margin-bottom: 0;
+        }
+
+        .calculated-bonus {
+            background-color: #fffae6;
+            color: #e65100;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode .calculated-bonus {
+            background-color: #4a3e26;
+            color: #ffd700;
+        }
+
+        .priority-star {
+            color: red;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        /* HP KONTROL STİLLERİ */
+        .hp-bar-container {
+            width: 100%;
+            height: 15px;
+            background-color: var(--dice-border);
+            border-radius: 4px;
+            margin-top: -10px;
+            margin-bottom: 5px;
+            overflow: hidden;
+            border: 1px solid var(--divider-color);
+        }
+
+        #hpBar {
+            height: 100%;
+            width: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .hp-control-group {
+            display: flex;
+            gap: 10px;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+
+        .rest-control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .hp-control-group button,
+        .rest-control-group button {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .hp-control-group #damageButton {
+            background-color: #d93025;
+            color: white;
+        }
+
+        .hp-control-group #healButton {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .rest-control-group #shortRestButton {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .rest-control-group #longRestButton {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .hp-control-group input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        /* KAYIT / YÜKLEME ALANI STİLİ (SADECE YAPISAL SINIF KALDI) */
+        .save-load-group {
+            display: none;
+        }
+
+        /* Gizlendi */
+
+        /* ZAR ATMA ALANI STİLİ */
+        .dice-roller {
+            background-color: var(--dice-bg);
+            padding: 15px;
+            border: 2px solid var(--dice-border);
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        #rollButton,
+        #baseAttackButton {
+            background-color: var(--main-header-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 10px;
+            min-width: 200px;
+        }
+
+        #rollButton:hover {
+            background-color: #0056b3;
+        }
+
+        #baseAttackButton {
+            background-color: #dc3545;
+        }
+
+        #baseAttackButton:hover {
+            background-color: #c82333;
+        }
+
+        #diceResult {
+            font-size: 2em;
+            font-weight: bold;
+            color: #d93025;
+            margin-top: 10px;
+            min-height: 1.2em;
+        }
+
+        /* YETENEK HAVUZU & RÜTBE STİLLERİ */
+        .skills-section-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .skills-text-column {
+            flex: 2 1 70%;
+            min-width: 280px;
+        }
+
+        .ability-text-area small {
+            margin-top: 5px;
+            color: var(--text-color);
+            display: block;
+            font-size: 0.8em;
+        }
+
+        .ability-slot-panel {
+            width: min(360px, 100%);
+        }
+
+        .skills-header-text h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+
+        .skills-header-text p {
+            margin: 4px 0;
+        }
+
+        .slot-instruction {
+            color: var(--text-color);
+            font-size: 0.85em;
+        }
+
+        .rank-bonus-text {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: var(--main-header-color);
+        }
+
+        .ability-pool-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ability-slot {
+            border: none;
+            border-radius: 6px;
+            padding: 6px 4px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: flex-start;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Small square checkbox on the left */
+        .ability-slot input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0 8px 0 6px;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .ability-slot input[type="checkbox"]:checked {
+            background: var(--main-header-color);
+            border-color: var(--main-header-color);
+        }
+
+        /* Dark rounded label box on the right (fills remaining width) */
+        .ability-slot-label {
+            display: block;
+            flex: 1 1 auto;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95em;
+            text-align: left;
+        }
+
+        /* Light-mode variant: lighter label box */
+        body:not(.dark-mode) .ability-slot input[type="checkbox"] {
+            border-color: #333;
+            background: #fff;
+            position: relative;
+            box-shadow: none;
+        }
+
+        /* Draw a small white check mark when checked (works with custom appearance) */
+        .ability-slot input[type="checkbox"]::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 2px;
+            width: 8px;
+            height: 6px;
+            transform: rotate(45deg) scale(0.9);
+            border-bottom: 2px solid transparent;
+            border-left: 2px solid transparent;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        body:not(.dark-mode) .ability-slot input[type="checkbox"]:checked {
+            background: var(--main-header-color);
+            border-color: var(--main-header-color);
+        }
+
+        body:not(.dark-mode) .ability-slot input[type="checkbox"]:checked::after {
+            border-color: #fff;
+            opacity: 1;
+        }
+
+        body:not(.dark-mode) .ability-slot-label {
+            background: #f0f0f0;
+            color: var(--text-color);
+            border: 1px solid var(--divider-color);
+        }
+
+        .ability-pool-input {
+            width: 100%;
+            min-height: 55px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--divider-color);
+            background-color: var(--bg-primary);
+            color: var(--text-color);
+        }
+
+        .multi-dice-panel {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .dice-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dice-control label {
+            font-weight: bold;
+        }
+
+        .dice-control input {
+            width: 60px;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--divider-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+        }
+
+        .multi-dice-btn {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #6f42c1;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .multi-dice-btn:hover {
+            background-color: #5a32a3;
+        }
+
+        /* PROFİL FOTOĞRAFI STİLLERİ */
+        .profile-pic-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .profile-pic-container {
+            width: 150px;
+            height: 150px;
+            border-radius: 12px;
+            border: 2px dashed var(--divider-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            background-color: var(--bg-secondary);
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .profile-pic-container:hover {
+            border-color: var(--main-header-color);
+            background-color: var(--header-bg);
+        }
+
+        #profilePicDisplay {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .profile-pic-placeholder {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 0.8em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-pic-placeholder span:first-child {
+            font-size: 2.5em;
+            display: block;
+        }
+
+        .profile-pic-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px;
+            font-size: 0.7em;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-pic-container:hover .profile-pic-overlay {
+            opacity: 1;
+        }
+
+        /* ZAR GEÇMİŞİ TABLOSU STİLLERİ */
+        .dice-history-container {
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dice-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .dice-history-table th,
+        .dice-history-table td {
+            border: 1px solid var(--divider-color);
+            padding: 10px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .dice-history-table th {
+            background-color: #cce5ff;
+            font-weight: bold;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .dice-history-table th {
+            background-color: #b38a00;
+            color: #fff;
+        }
+
+        .dice-history-table tbody tr:hover {
+            background-color: var(--dice-bg);
+        }
+
+        body.dark-mode .dice-history-table tbody tr:hover {
+            background-color: #2a2a2a;
+        }
+
+        .dice-history-table .critical-success {
+            color: #76ff03;
+            font-weight: bold;
+        }
+
+        .dice-history-table .critical-fail {
+            color: #ff1744;
+            font-weight: bold;
+        }
+
+        /* YETENEK TABLOSU STİLLERİ */
+        .skills-items-layout {
+            display: flex;
+            gap: 30px;
+        }
+
+        .skills-table-container {
+            flex: 0 0 40%;
+            min-width: 300px;
+        }
+
+        .items-textarea-container {
+            flex: 1 1 60%;
+        }
+
+        .skill-reference-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .skill-reference-table th,
+        .skill-reference-table td {
+            border: 1px solid var(--divider-color);
+            padding: 8px;
+            text-align: left;
+            transition: border-color 0.3s;
+        }
+
+        .skill-reference-table th {
+            background-color: #cce5ff;
+            font-weight: bold;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .skill-reference-table th {
+            background-color: #b38a00;
+            color: #fff;
+        }
+
+        body.dark-mode .skill-reference-table td:first-child {
+            background-color: #2a2200;
+        }
+
+        body.dark-mode .skill-reference-table td a {
+            color: white;
+        }
+
+        .skill-reference-table .skill-stat {
+            font-weight: bold;
+            color: #005c99;
+        }
+
+        body.dark-mode .skill-reference-table .skill-stat {
+            color: #80bdff;
+        }
+
+        /* MODAL ZAR ATMA ANİMASYON STİLLERİ */
+        #rollModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        #modalResult {
+            color: white;
+            font-size: 4em;
+            font-weight: bold;
+            text-align: center;
+            padding: 40px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #333, #555);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
+            min-width: 300px;
+            transition: all 0.5s ease;
+        }
+
+        #modalTitle {
+            color: #ccc;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .modal-rolling {
+            animation: shake 0.1s cubic-bezier(.36, .07, .19, .97) both infinite;
+            text-shadow: 0 0 10px white;
+        }
+
+        /* YENİ MENÜ VE KONTROL STİLLERİ */
+        #mainMenu {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .menu-button,
+        .char-list-item button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--button-text-color);
+            transition: background-color 0.3s;
+        }
+
+        #newCharacterButton {
+            background-color: var(--save-button-bg);
+        }
+
+        #newCharacterButton:hover {
+            background-color: #1e7e34;
+        }
+
+        #goToCharacterListButton {
+            background-color: var(--main-header-color);
+        }
+
+        #goToCharacterListButton:hover {
+            background-color: #0056b3;
+        }
+
+        #characterListContainer {
+            margin-top: 20px;
+        }
+
+        .char-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: var(--header-bg);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .char-list-item span {
+            flex-grow: 1;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .char-list-item button {
+            width: 100px;
+            margin-left: 10px;
+            margin-bottom: 0;
+            font-size: 0.9em;
+            padding: 6px;
+        }
+
+        .char-list-item .load-btn {
+            background-color: var(--load-button-bg);
+            color: #333;
+        }
+
+        .char-list-item .delete-btn {
+            background-color: var(--reset-button-bg);
+        }
+
+        #backToMenuButton {
+            background-color: var(--main-menu-bg);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        #characterSheetContainer {
+            display: none;
+        }
+
+        .top-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1001;
+        }
+
+        .top-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9em;
+            transition: opacity 0.2s;
+        }
+
+        .top-btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-dark {
+            background-color: #6c757d;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        /* Responsive düzenleme */
+        @media (max-width: 900px) {
+            .skills-items-layout {
+                flex-direction: column;
+            }
+
+            .skills-table-container,
+            .items-textarea-container {
+                flex: 1 1 100%;
+                min-width: initial;
+            }
+
+            .stat-group.three-col .stat-item {
+                flex: 1 1 calc(50% - 20px);
+            }
+
+            .stat-group.basic-info {
+                flex-direction: column;
+            }
+
+            .stat-group.basic-info .stat-item {
+                min-width: 100%;
+            }
+
+            .save-load-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-controls">
+        <button id="darkModeToggle" onclick="toggleDarkMode()" class="top-btn btn-dark">🌙 Gece Modu Aç</button>
+        <button id="importCharacterTopButton" onclick="importCharacterFromFile()" class="top-btn btn-info">📥 Karakter
+            İçe Aktar</button>
+    </div>
+
+    <div id="rollModal">
+        <div id="modalTitle"></div>
+        <div id="modalResult">Zar Atılıyor...</div>
+        <p style="color: #ccc; margin-top: 30px;">Sonucu görmek ve kapatmak için tıklayın.</p>
+    </div>
+
+    <div id="mainMenu">
+        <h1>Karakter Yönetimi Ana Menü</h1>
+        <p>Lütfen bir işlem seçiniz:</p>
+
+        <button id="newCharacterButton" onclick="showCharacterSheet(true)" class="menu-button">+ YENİ KARAKTER
+            OLUŞTUR</button>
+
+        <div id="characterListContainer">
+            <h3
+                style="margin-top: 20px; border-top: 1px solid var(--divider-color); padding-top: 20px; color: var(--text-color);">
+                Kayıtlı Karakterler</h3>
+            <ul id="charList" style="list-style: none; padding: 0;">
+            </ul>
+        </div>
+    </div>
+
+    <div id="characterSheetContainer" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button id="backToMenuButton" onclick="saveCurrentAndGoToMenu()">◀ Ana Menüye Dön & Kaydet</button>
+            <h1>Karakter Kağıdı</h1>
+        </div>
+
+        <div class="section-title">✨ Temel Bilgiler</div>
+        <div class="profile-pic-section">
+            <div class="profile-pic-container" onclick="document.getElementById('profilePicInput').click()">
+                <div id="profilePicPlaceholder" class="profile-pic-placeholder">
+                    <span>📷</span>
+                    <span>Fotoğraf Yükle</span>
+                </div>
+                <img id="profilePicDisplay" src="" alt="Profil Fotoğrafı">
+                <div class="profile-pic-overlay">Değiştir</div>
+                <input type="file" id="profilePicInput" style="display: none;" accept="image/*"
+                    onchange="handleProfilePicUpload(this)">
+            </div>
+            <div class="stat-group basic-info" style="flex: 1;">
+                <div class="stat-item"><label for="isim">İSİM</label><input type="text" id="isim" name="isim"></div>
+                <div class="stat-item">
+                    <label for="sinif">SINIF</label>
+                    <select id="sinif" name="sinif" onchange="updateCharacterSheet()">
+                        <option value="">-- Seçiniz --</option>
+                    </select>
+                </div>
+                <div class="stat-item">
+                    <label for="irk">IRK</label>
+                    <select id="irk" name="irk" onchange="updateCharacterSheet()">
+                        <option value="">-- Seçiniz --</option>
+                    </select>
+                </div>
+                <div class="stat-item"><label for="yas">YAŞ</label><input type="text" id="yas" name="yas"></div>
+                <div class="stat-item">
+                    <label for="rutbe">RÜTBE</label>
+                    <select id="rutbe" name="rutbe" onchange="updateCharacterSheet()">
+                        <option value="bronz" selected>Bronz</option>
+                        <option value="gumus">Gümüş</option>
+                        <option value="altin">Altın</option>
+                        <option value="elmas">Elmas</option>
+                        <option value="platin">Platin</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="section-title">📊 İstatistikler</div>
+        <p style="margin-top: -10px; margin-bottom: 20px; font-style: italic;">Not: Irk bonusları otomatik *eklenmez*.
+            Lütfen istatistik değerlerine manuel ekleyiniz.</p>
+
+        <div class="hp-armor-group stat-group">
+            <div class="stat-item hp-box" style="width: 100%;">
+                <label for="can">CAN (Mevcut / Maks.)</label>
+                <input type="text" id="can" name="can" placeholder="Örn: 100 / 112" readonly>
+                <div class="hp-bar-container">
+                    <div id="hpBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hp-control-group full-width">
+            <input type="text" id="hpValueInput" placeholder="Değer">
+            <button id="damageButton">Hasar Al</button>
+            <button id="healButton">İyileştir</button>
+        </div>
+
+        <div class="rest-control-group full-width">
+            <button id="shortRestButton">Kısa Dinlenme (HP/2)</button>
+            <button id="longRestButton">Uzun Dinlenme (Full HP)</button>
+        </div>
+
+        <div class="stat-group three-col">
+            <div class="stat-item fiziksel_guc">
+                <label>FİZİKSEL GÜÇ<span id="fiziksel_guc_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('fiziksel_guc')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="fiziksel_guc_val" name="fiziksel_guc_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('fiziksel_guc');" value="10"><label
+                            for="fiziksel_guc_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="fiziksel_guc_bonus"
+                            name="fiziksel_guc_bonus" placeholder="+0" readonly class="calculated-bonus"><label
+                            for="fiziksel_guc_bonus">Bonus</label></div>
+                </div>
+            </div>
+
+            <div class="stat-item dayaniklilik">
+                <label>DAYANIKLILIK<span id="dayaniklilik_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('dayaniklilik')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="dayaniklilik_val" name="dayaniklilik_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('dayaniklilik'); updateCharacterSheet();"
+                            value="10"><label for="dayaniklilik_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="dayaniklilik_bonus"
+                            name="dayaniklilik_bonus" placeholder="+0" readonly class="calculated-bonus"><label
+                            for="dayaniklilik_bonus">Bonus</label></div>
+                </div>
+            </div>
+            <div class="stat-item bilgelik">
+                <label>BİLGELİK<span id="bilgelik_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('bilgelik')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="bilgelik_val" name="bilgelik_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('bilgelik');" value="10"><label
+                            for="bilgelik_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="bilgelik_bonus" name="bilgelik_bonus"
+                            placeholder="+0" readonly class="calculated-bonus"><label for="bilgelik_bonus">Bonus</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-item ceviklik">
+                <label>ÇEVİKLİK<span id="ceviklik_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('ceviklik')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="ceviklik_val" name="ceviklik_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('ceviklik');" value="10"><label
+                            for="ceviklik_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="ceviklik_bonus" name="ceviklik_bonus"
+                            placeholder="+0" readonly class="calculated-bonus"><label for="ceviklik_bonus">Bonus</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-item zeka">
+                <label>ZEKA<span id="zeka_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('zeka')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="zeka_val" name="zeka_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('zeka');" value="10"><label
+                            for="zeka_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="zeka_bonus" name="zeka_bonus"
+                            placeholder="+0" readonly class="calculated-bonus"><label for="zeka_bonus">Bonus</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-item karizma">
+                <label>KARİZMA<span id="karizma_race_bonus" class="race-bonus-text"
+                        onclick="applyRaceBonus('karizma')"></span></label>
+                <div class="value-bonus-group">
+                    <div class="value-input-container"><input type="text" id="karizma_val" name="karizma_val"
+                            placeholder="Temel Puan" oninput="calculateBonus('karizma');" value="10"><label
+                            for="karizma_val">Değer</label></div>
+                    <div class="bonus-input-container"><input type="text" id="karizma_bonus" name="karizma_bonus"
+                            placeholder="+0" readonly class="calculated-bonus"><label for="karizma_bonus">Bonus</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dice-roller">
+            <h3>Zar Atma Alanı (D20 + Çoklu Zar)</h3>
+            <p>Beceri testleri için 20 yüzlü zarı atın veya diğer zar kombinasyonlarını kullanın.</p>
+            <button id="rollButton">D20 ZAR AT</button>
+            <button id="baseAttackButton" style="background-color: #dc3545; color: white;">TEMEL SALDIRI</button>
+            <div class="multi-dice-panel">
+                <div class="dice-control">
+                    <label for="diceCount-4">D4</label>
+                    <input type="number" id="diceCount-4" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="4">D4</button>
+                </div>
+                <div class="dice-control">
+                    <label for="diceCount-6">D6</label>
+                    <input type="number" id="diceCount-6" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="6">D6</button>
+                </div>
+                <div class="dice-control">
+                    <label for="diceCount-8">D8</label>
+                    <input type="number" id="diceCount-8" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="8">D8</button>
+                </div>
+                <div class="dice-control">
+                    <label for="diceCount-10">D10</label>
+                    <input type="number" id="diceCount-10" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="10">D10</button>
+                </div>
+                <div class="dice-control">
+                    <label for="diceCount-12">D12</label>
+                    <input type="number" id="diceCount-12" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="12">D12</button>
+                </div>
+                <div class="dice-control">
+                    <label for="diceCount-20">D20</label>
+                    <input type="number" id="diceCount-20" min="1" value="1">
+                    <button type="button" class="multi-dice-btn" data-dice="20">D20</button>
+                </div>
+            </div>
+            <div id="diceResult">---</div>
+        </div>
+
+        <div class="section-title">⚔️ Yetenekler ve Eşyalar</div>
+
+        <div class="skills-items-layout">
+            <div class="skills-table-container">
+                <h3 style="margin-top: -10px;">Yetenek (Skill) Hızlı Referans</h3>
+                <table class="skill-reference-table" id="skillReferenceTable">
+                    <thead>
+                        <tr>
+                            <th>Yetenek (Skill)</th>
+                            <th style="width: 30%;">Kullanılacak İstatistik</th>
+                            <th style="width: 15%;">Bonus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-stat-key="ceviklik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('ceviklik', 'Acrobatics (Akrobasi)')">Acrobatics (Akrobasi)
+                                    🎲</a></td>
+                            <td class="skill-stat">ÇEVİKLİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="bilgelik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('bilgelik', 'Animal Handling (Hayvan İdaresi)')">Animal
+                                    Handling (Hayvan İdaresi) 🎲</a></td>
+                            <td class="skill-stat">BİLGELİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="zeka">
+                            <td><a href="javascript:void(0);" onclick="rollSkillCheck('zeka', 'Arcana (Gizem)')">Arcana
+                                    (Gizem) 🎲</a></td>
+                            <td class="skill-stat">ZEKA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="fiziksel_guc">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('fiziksel_guc', 'Athletics (Atletizm)')">Athletics
+                                    (Atletizm) 🎲</a></td>
+                            <td class="skill-stat">FİZİKSEL GÜÇ</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="karizma">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('karizma', 'Deception (Kandırma)')">Deception (Kandırma)
+                                    🎲</a></td>
+                            <td class="skill-stat">KARİZMA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="zeka">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('zeka', 'History (Tarih)')">History (Tarih) 🎲</a></td>
+                            <td class="skill-stat">ZEKA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="bilgelik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('bilgelik', 'Insight (Sezgi)')">Insight (Sezgi) 🎲</a></td>
+                            <td class="skill-stat">BİLGELİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="karizma">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('karizma', 'Intimidation (Korkutma)')">Intimidation
+                                    (Korkutma) 🎲</a></td>
+                            <td class="skill-stat">KARİZMA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="zeka">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('zeka', 'Investigation (Araştırma)')">Investigation
+                                    (Araştırma) 🎲</a></td>
+                            <td class="skill-stat">ZEKA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="bilgelik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('bilgelik', 'Medicine (Tıp)')">Medicine (Tıp) 🎲</a></td>
+                            <td class="skill-stat">BİLGELİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="zeka">
+                            <td><a href="javascript:void(0);" onclick="rollSkillCheck('zeka', 'Nature (Doğa)')">Nature
+                                    (Doğa) 🎲</a></td>
+                            <td class="skill-stat">ZEKA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="bilgelik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('bilgelik', 'Perception (Algı)')">Perception (Algı) 🎲</a>
+                            </td>
+                            <td class="skill-stat">BİLGELİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="karizma">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('karizma', 'Performance (Gösteri)')">Performance (Gösteri)
+                                    🎲</a></td>
+                            <td class="skill-stat">KARİZMA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="karizma">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('karizma', 'Persuasion (İkna)')">Persuasion (İkna) 🎲</a>
+                            </td>
+                            <td class="skill-stat">KARİZMA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="zeka">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('zeka', 'Religion (Din)')">Religion (Din) 🎲</a></td>
+                            <td class="skill-stat">ZEKA</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="ceviklik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('ceviklik', 'Sleight of Hand (El Çabukluğu)')">Sleight of
+                                    Hand (El Çabukluğu) 🎲</a></td>
+                            <td class="skill-stat">ÇEVİKLİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="ceviklik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('ceviklik', 'Stealth (Gizlenme)')">Stealth (Gizlenme) 🎲</a>
+                            </td>
+                            <td class="skill-stat">ÇEVİKLİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                        <tr data-stat-key="bilgelik">
+                            <td><a href="javascript:void(0);"
+                                    onclick="rollSkillCheck('bilgelik', 'Survival (Hayatta Kalma)')">Survival (Hayatta
+                                    Kalma) 🎲</a></td>
+                            <td class="skill-stat">BİLGELİK</td>
+                            <td class="skill-bonus"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="items-textarea-container">
+                <div class="skills-section-wrapper">
+                    <div class="skills-text-column">
+                        <div class="stat-item full-width ability-text-area">
+                            <label for="yetenekler">YETENEKLER / BÜYÜLER</label>
+                            <textarea id="yetenekler" name="yetenekler" rows="8"
+                                placeholder="Aktif büyülerinizi ya da yeteneklerinizi buraya not alabilirsiniz..."></textarea>
+                        </div>
+                    </div>
+                    <div class="ability-slot-panel">
+                        <div class="skills-header-text">
+                            <h3>Yetenek/Büyü Slotları</h3>
+                            <p class="rank-bonus-text" id="rankDiceBonusLabel">Bronz rütbesi tüm zaralara +0 bonus verir
+                                ve 1 yetenek slotu sunar.</p>
+                        </div>
+                        <div id="abilityPoolSlots" class="ability-pool-slots"></div>
+                    </div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-item full-width"><label for="pasif_yetenekler">PASİF YETENEKLER</label><textarea
+                            id="pasif_yetenekler" name="pasif_yetenekler" rows="8"
+                            placeholder="Pasif yeteneklerinizi ve etkilerini buraya yazın..."></textarea></div>
+                    <div class="stat-item full-width"><label for="itemler">ITEMLER</label><textarea id="itemler"
+                            name="itemler" rows="10" placeholder="Envanterinizdeki eşyaları listeleyin..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 30px;">Bu form, **FRP** karakterinizi oluşturmanız için
+            tasarlanmıştır. @SylonAge</p>
+
+        <div class="section-title">📜 Son Zarlar (Son 10)</div>
+        <div class="dice-history-container">
+            <table id="diceHistoryTable" class="dice-history-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Zar Tipi</th>
+                        <th>Sonuç</th>
+                        <th>Zaman</th>
+                    </tr>
+                </thead>
+                <tbody id="diceHistoryBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 15px; color: var(--text-color);">Henüz zar
+                            atılmadı</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // KARAKTER VERİLERİ
+        const CLASS_HP = {
+            "Barbarian (Barbar)": 130, "Fighter (Savaşçı)": 125, "Paladin (Paladin)": 120,
+            "Cleric (Ruhban)": 115, "Ranger (Bekçi)": 115, "Monk (Keşiş)": 110,
+            "Rogue (Hırsız)": 110, "Bard (Ozan)": 105, "Druid (Druid)": 105,
+            "Warlock (Büyücü)": 105, "Sorcerer (Büyücü)": 100, "Wizard (Büyücü)": 100
+        };
+
+        const RACE_STAT_BONUSES = {
+            "İnsan": { stats: { 'fiziksel_guc': 1, 'dayaniklilik': 1, 'bilgelik': 1, 'ceviklik': 1, 'zeka': 1, 'karizma': 1 }, hp: 0 },
+            "Elf": { stats: { 'ceviklik': 2, 'zeka': 1 }, hp: 0 },
+            "Cüce": { stats: { 'fiziksel_guc': 1, 'dayaniklilik': 2 }, hp: 5 },
+            "Yarı-Elf": { stats: { 'karizma': 2, 'bilgelik': 1 }, hp: 0 },
+            "Ejderha Soyu": { stats: { 'fiziksel_guc': 2, 'karizma': 1 }, hp: 5 },
+            "Yarı-Ork": { stats: { 'fiziksel_guc': 2, 'dayaniklilik': 1 }, hp: 10 },
+            "Gnome": { stats: { 'zeka': 2, 'ceviklik': 1 }, hp: 0 },
+            "Buçukluk": { stats: { 'ceviklik': 2, 'karizma': 1 }, hp: 0 },
+            "Tiefling": { stats: { 'zeka': 1, 'karizma': 2 }, hp: 0 }
+        };
+
+        // SÖZDİZİMİ HATASI GİDERİLDİ
+        const CLASS_PRIORITIES = {
+            "Barbarian (Barbar)": "fiziksel_guc",
+            "Fighter (Savaşçı)": "fiziksel_guc",
+            "Paladin (Paladin)": "karizma",
+            "Cleric (Ruhban)": "bilgelik",
+            "Monk (Keşiş)": "ceviklik",
+            "Ranger (Bekçi)": "ceviklik",
+            "Rogue (Hırsız)": "ceviklik",
+            "Bard (Ozan)": "karizma",
+            "Druid (Druid)": "bilgelik",
+            "Warlock (Büyücü)": "karizma",
+            "Sorcerer (Büyücü)": "karizma",
+            "Wizard (Büyücü)": "zeka"
+        };
+
+        const ALL_STATS_KEYS = ['fiziksel_guc', 'dayaniklilik', 'bilgelik', 'ceviklik', 'zeka', 'karizma'];
+
+        const RANK_SETTINGS = {
+            bronz: { label: 'Bronz', diceBonus: 0, hpBonus: 0, abilitySlots: 2 },
+            gumus: { label: 'Gümüş', diceBonus: 1, hpBonus: 20, abilitySlots: 3 },
+            altin: { label: 'Altın', diceBonus: 2, hpBonus: 40, abilitySlots: 4 },
+            elmas: { label: 'Elmas', diceBonus: 3, hpBonus: 60, abilitySlots: 5 },
+            platin: { label: 'Platin', diceBonus: 4, hpBonus: 80, abilitySlots: 6 }
+        };
+        const DEFAULT_RANK_KEY = 'bronz';
+
+        // ÇOKLU KAYIT İÇİN YENİ ANAHTARLAR
+        const LOCAL_STORAGE_KEY = 'frp_character_list';
+        let currentCharacterName = '';
+        let raceBonusAppliedState = {};
+        ALL_STATS_KEYS.forEach(key => raceBonusAppliedState[key] = false);
+
+        // ZAR GEÇMİŞİ SISTEMI
+        let diceHistory = [];
+        const MAX_HISTORY_ENTRIES = 10;
+
+
+        // --- YARDIMCI FONKSİYONLAR ---
+
+        function addDiceToHistory(diceType, result) {
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+
+            diceHistory.unshift({
+                diceType: diceType,
+                result: result,
+                time: timeString
+            });
+
+            if (diceHistory.length > MAX_HISTORY_ENTRIES) {
+                diceHistory.pop();
+            }
+
+            updateDiceHistoryDisplay();
+        }
+
+        function updateDiceHistoryDisplay() {
+            const tbody = document.getElementById('diceHistoryBody');
+
+            if (diceHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 15px; color: var(--text-color);">Henüz zar atılmadı</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            diceHistory.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${entry.diceType}</td>
+                <td>${entry.result}</td>
+                <td>${entry.time}</td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getCharacterList() {
+            const listJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+            return listJson ? JSON.parse(listJson) : [];
+        }
+
+        function setCharacterList(list) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+        }
+
+        function getCharacterDataKey(name) {
+            // İsimdeki boşlukları ve küçük harfleri kullanarak benzersiz bir anahtar oluşturur
+            return `frp_char_${name.replace(/\s+/g, '_').toLowerCase()}`;
+        }
+
+        // --- EKRAN YÖNETİMİ ---
+
+        function showMainMenu() {
+            document.getElementById('mainMenu').style.display = 'block';
+            document.getElementById('characterSheetContainer').style.display = 'none';
+            const importBtn = document.getElementById('importCharacterTopButton');
+            if (importBtn) importBtn.style.display = 'flex';
+            renderCharacterList();
+        }
+
+        function showCharacterSheet(isNew) {
+            if (isNew) {
+                // Yeni karakter oluşturuluyorsa, tüm alanları temizle
+                resetCharacterSheetData();
+                currentCharacterName = '';
+                // İsim inputunu da temizle
+                document.getElementById('isim').value = '';
+            }
+
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('characterSheetContainer').style.display = 'block';
+
+            const importBtn = document.getElementById('importCharacterTopButton');
+            if (importBtn) importBtn.style.display = 'none';
+
+            updateCharacterSheet();
+        }
+
+        function showCharacterList() {
+            showMainMenu();
+        }
+
+        function saveCurrentAndGoToMenu() {
+            // Menüye dönmeden önce otomatik kaydetme
+            saveCharacterData(true); // Parametre true: Geri dönüldüğü için kaydet
+            showMainMenu();
+        }
+
+        // --- TEMİZLEME/SIFIRLAMA ---
+
+        function handleProfilePicUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                if (file.size > 20 * 1024 * 1024) { // 20MB limit
+                    alert("Lütfen 20MB'dan küçük bir resim seçiniz.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const display = document.getElementById('profilePicDisplay');
+                    const placeholder = document.getElementById('profilePicPlaceholder');
+                    display.src = e.target.result;
+                    display.style.display = 'block';
+                    placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetCharacterSheetData() {
+            const formElements = document.querySelectorAll('#characterSheetContainer input, #characterSheetContainer select, #characterSheetContainer textarea');
+            formElements.forEach(element => {
+                if (!element.id || element.id === 'hpValueInput') {
+                    return;
+                }
+
+                if (element.type === 'checkbox') {
+                    element.checked = false;
+                } else if (element.tagName === 'SELECT') {
+                    element.selectedIndex = 0;
+                } else if (element.id.endsWith('_val')) {
+                    element.value = '10'; // Stat değerlerini varsayılan 10'a ayarla
+                } else {
+                    element.value = '';
+                }
+            });
+
+            document.getElementById('can').value = '--- / ---';
+            document.getElementById('diceResult').textContent = '---';
+
+            ALL_STATS_KEYS.forEach(statKey => {
+                document.getElementById(statKey + '_bonus').value = '+0';
+                raceBonusAppliedState[statKey] = false;
+            });
+            clearPriorityStars();
+            updateRaceBonusDisplay('');
+            updateHPBar(0, 0);
+            updateRankDependentFields();
+
+            // Profil fotoğrafını temizle
+            const display = document.getElementById('profilePicDisplay');
+            const placeholder = document.getElementById('profilePicPlaceholder');
+            display.src = '';
+            display.style.display = 'none';
+            placeholder.style.display = 'flex';
+        }
+
+        // --- CRUD İŞLEMLERİ ---
+
+        // Kaydetme fonksiyonu güncellendi (Artık menüye dönerken otomatik kaydediyor)
+        function saveCharacterData(isAutoSave = false) {
+            const name = document.getElementById('isim').value.trim();
+            if (!name) {
+                if (!isAutoSave) {
+                    alert("Lütfen karakterinize bir isim verin.");
+                }
+                return;
+            }
+
+            const characterData = {};
+            const formElements = document.querySelectorAll('#characterSheetContainer input, #characterSheetContainer select, #characterSheetContainer textarea');
+
+            formElements.forEach(element => {
+                if (element.id && element.id !== 'hpValueInput') {
+                    if (element.type === 'checkbox') {
+                        characterData[element.id] = element.checked;
+                    } else {
+                        characterData[element.id] = element.value;
+                    }
+                }
+            });
+            characterData['raceBonusAppliedState'] = raceBonusAppliedState;
+
+            // Profil fotoğrafını kaydet
+            const profilePic = document.getElementById('profilePicDisplay').src;
+            if (profilePic && profilePic.startsWith('data:image')) {
+                characterData['profilFoto'] = profilePic;
+            }
+
+            const dataKey = getCharacterDataKey(name);
+
+            try {
+                // Ana Listeyi Güncelle
+                let list = getCharacterList();
+                if (!list.includes(name)) {
+                    list.push(name);
+                    setCharacterList(list);
+                }
+
+                // Karakter Verisini Kaydet
+                localStorage.setItem(dataKey, JSON.stringify(characterData));
+                currentCharacterName = name;
+
+                updateCharacterSheet();
+                if (!isAutoSave) {
+                    alert(`Karakter "${name}" başarıyla kaydedildi!`);
+                }
+
+            } catch (e) {
+                console.error("Karakter verileri kaydedilemedi:", e);
+                if (!isAutoSave) {
+                    alert("Kaydetme hatası! Tarayıcınızın yerel depolama alanı dolu veya devre dışı.");
+                }
+            }
+        }
+
+        function loadCharacter(name) {
+            const dataKey = getCharacterDataKey(name);
+            try {
+                const storedData = localStorage.getItem(dataKey);
+                if (!storedData) {
+                    alert("Kayıtlı karakter verisi bulunamadı.");
+                    return;
+                }
+
+                const characterData = JSON.parse(storedData);
+
+                if (characterData.raceBonusAppliedState) {
+                    raceBonusAppliedState = characterData.raceBonusAppliedState;
+                } else {
+                    ALL_STATS_KEYS.forEach(key => raceBonusAppliedState[key] = false);
+                }
+
+                const abilityPoolData = {};
+                for (const id in characterData) {
+                    if (id.startsWith('abilityPool')) {
+                        abilityPoolData[id] = characterData[id];
+                        continue;
+                    }
+
+                    if (id === 'profilFoto') {
+                        const display = document.getElementById('profilePicDisplay');
+                        const placeholder = document.getElementById('profilePicPlaceholder');
+                        if (characterData[id]) {
+                            display.src = characterData[id];
+                            display.style.display = 'block';
+                            placeholder.style.display = 'none';
+                        } else {
+                            display.src = '';
+                            display.style.display = 'none';
+                            placeholder.style.display = 'flex';
+                        }
+                        continue;
+                    }
+
+                    const element = document.getElementById(id);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = !!characterData[id];
+                        } else if (element.type !== 'file') { // Dosya inputlarına değer atanamaz (Güvenlik)
+                            element.value = characterData[id];
+                        }
+                    }
+                }
+
+                currentCharacterName = name;
+                showCharacterSheet(false);
+                restoreAbilityPoolState(abilityPoolData);
+
+            } catch (e) {
+                console.error("Karakter verileri yüklenemedi:", e);
+                alert("Yükleme hatası: " + e.message + "\n(Kayıt dosyası bozuk olabilir veya veri yapısı uyumsuz.)");
+            }
+        }
+
+        function restoreAbilityPoolState(savedSlots = {}) {
+            Object.entries(savedSlots).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    return;
+                }
+
+                if (element.type === 'checkbox') {
+                    element.checked = Boolean(value);
+                } else {
+                    element.value = value ?? '';
+                }
+            });
+        }
+
+        function deleteCharacter(name) {
+            if (!confirm(`Karakter "${name}" kalıcı olarak silinecektir. Emin misiniz?`)) {
+                return;
+            }
+
+            const dataKey = getCharacterDataKey(name);
+
+            // Ana Listeden Sil
+            let list = getCharacterList();
+            list = list.filter(item => item !== name);
+            setCharacterList(list);
+
+            // Karakter Verisini Sil
+            localStorage.removeItem(dataKey);
+
+            // Eğer silinen, şu anda açık olan karakterse, sıfırla
+            if (currentCharacterName === name) {
+                currentCharacterName = '';
+                resetCharacterSheetData();
+            }
+
+            alert(`Karakter "${name}" başarıyla silindi.`);
+            renderCharacterList();
+        }
+
+        function renderCharacterList() {
+            const charListElement = document.getElementById('charList');
+            charListElement.innerHTML = '';
+            const list = getCharacterList();
+
+            if (list.length === 0) {
+                charListElement.innerHTML = '<p style="text-align: center; color: var(--header-color); padding: 20px; border: 1px dashed var(--divider-color); border-radius: 6px;">Kayıtlı karakter bulunmamaktadır.</p>';
+                return;
+            }
+
+            list.forEach(name => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('char-list-item');
+
+                listItem.innerHTML = `
+                <span>${name}</span>
+                <div style="display: flex; gap: 5px;">
+                    <button class="load-btn" onclick="loadCharacter('${name}')" style="width: 70px;">YÜKLE</button>
+                    <button class="btn-success" onclick="exportCharacter('${name}')" style="width: 70px; font-size: 0.9em; padding: 6px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white;">AKTAR</button>
+                    <button class="delete-btn" onclick="deleteCharacter('${name}')" style="width: 70px;">SİL</button>
+                </div>
+            `;
+                charListElement.appendChild(listItem);
+            });
+        }
+
+        // --- MEVCUT DİĞER FONKSİYONLAR ---
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const toggleButton = document.getElementById('darkModeToggle');
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                toggleButton.textContent = '☀️ Gündüz Modu Aç';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                toggleButton.textContent = '🌙 Gece Modu Aç';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        function populateDropdowns() {
+            const sinifSelect = document.getElementById('sinif');
+            const irkSelect = document.getElementById('irk');
+
+            Object.keys(CLASS_HP).forEach(sinif => {
+                const option = document.createElement('option');
+                option.value = sinif;
+                option.textContent = sinif;
+                sinifSelect.appendChild(option);
+            });
+
+            Object.keys(RACE_STAT_BONUSES).forEach(irk => {
+                const option = document.createElement('option');
+                option.value = irk;
+                option.textContent = irk;
+                irkSelect.appendChild(option);
+            });
+        }
+
+        function updateRaceBonusDisplay(selectedRace) {
+            ALL_STATS_KEYS.forEach(statKey => {
+                const displaySpan = document.getElementById(statKey + '_race_bonus');
+                if (displaySpan) {
+                    displaySpan.textContent = '';
+                }
+            });
+
+            const bonuses = RACE_STAT_BONUSES[selectedRace]?.stats || {};
+
+            for (const [statKey, bonusAmount] of Object.entries(bonuses)) {
+                const displaySpan = document.getElementById(statKey + '_race_bonus');
+
+                if (displaySpan && !raceBonusAppliedState[statKey]) {
+                    const sign = bonusAmount >= 0 ? '+' : '';
+                    displaySpan.textContent = ` (${sign}${bonusAmount} Irk Bonusu)`;
+                }
+            }
+        }
+
+        function clearPriorityStars() {
+            const allLabels = document.querySelectorAll('label');
+            allLabels.forEach(label => {
+                const star = label.querySelector('.priority-star');
+                if (star) {
+                    star.remove();
+                }
+            });
+        }
+
+        function getRankConfig(rankKey) {
+            return RANK_SETTINGS[rankKey] || RANK_SETTINGS[DEFAULT_RANK_KEY];
+        }
+
+        function getRankDiceBonus() {
+            const rankValue = document.getElementById('rutbe')?.value;
+            return getRankConfig(rankValue).diceBonus;
+        }
+
+        function updateRankDependentFields() {
+            const rankValue = document.getElementById('rutbe')?.value;
+            const config = getRankConfig(rankValue);
+            const bonusLabel = document.getElementById('rankDiceBonusLabel');
+            if (bonusLabel) {
+                bonusLabel.textContent = `${config.label} rütbesi tüm zaralara +${config.diceBonus} bonus verir, karaktere +${config.hpBonus} HP ekler ve ${config.abilitySlots} yetenek slotu sunar.`;
+            }
+            updateAbilityPoolSlots(config.abilitySlots);
+            updateAbilityTextAreaRows(config.abilitySlots);
+        }
+
+        function updateAbilityPoolSlots(slotCount) {
+            const container = document.getElementById('abilityPoolSlots');
+            if (!container) return;
+
+            const previousStates = Array.from(container.querySelectorAll('.ability-slot input[type="checkbox"]')).map(cb => cb.checked);
+
+            container.innerHTML = '';
+
+            for (let i = 0; i < slotCount; i++) {
+                const slotWrapper = document.createElement('div');
+                slotWrapper.className = 'ability-slot';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `abilityPoolActive-${i + 1}`;
+                checkbox.name = checkbox.id;
+                checkbox.checked = !!previousStates[i];
+
+                const label = document.createElement('label');
+                label.className = 'ability-slot-label';
+                label.setAttribute('for', checkbox.id);
+                label.textContent = `Slot ${i + 1}`;
+                slotWrapper.appendChild(checkbox);
+                slotWrapper.appendChild(label);
+                container.appendChild(slotWrapper);
+            }
+        }
+
+        function updateAbilityTextAreaRows(slotCount) {
+            const textarea = document.getElementById('yetenekler');
+            if (!textarea) {
+                return;
+            }
+
+            const baseRows = 6;
+            const computedRows = Math.min(12, baseRows + slotCount);
+            textarea.rows = computedRows;
+        }
+
+        function addPriorityStars(priorities) {
+            clearPriorityStars();
+
+            // Birincil istatistikleri işaretle
+            priorities.forEach(statName => {
+                // statName örneğin: "FİZİKSEL GÜÇ"
+                const allLabels = document.querySelectorAll('.stat-group.three-col label');
+                allLabels.forEach(label => {
+                    // Label içeriğini al (span hariç)
+                    let labelContent = '';
+                    Array.from(label.childNodes).forEach(node => {
+                        if (node.nodeType === 3) { // Text node
+                            labelContent += node.textContent;
+                        }
+                    });
+                    labelContent = labelContent.trim();
+
+                    // Eğer label'ın içeriği statName ile eşleşiyorsa yıldız ekle
+                    if (labelContent === statName) {
+                        if (!label.querySelector('.priority-star')) {
+                            const star = document.createElement('span');
+                            star.textContent = ' *';
+                            star.classList.add('priority-star');
+                            label.appendChild(star);
+                        }
+                    }
+                });
+            });
+        }
+
+        function updateHPBar(currentHP, maxHP) {
+            const hpBar = document.getElementById('hpBar');
+            if (!hpBar || maxHP === 0) {
+                if (hpBar) hpBar.style.width = '0%';
+                return;
+            }
+
+            let percent = (currentHP / maxHP) * 100;
+            percent = Math.max(0, Math.min(100, percent));
+
+            hpBar.style.width = `${percent}%`;
+
+            if (percent > 50) {
+                hpBar.style.backgroundColor = '#4CAF50';
+            } else if (percent > 20) {
+                hpBar.style.backgroundColor = '#ffc107';
+            } else {
+                hpBar.style.backgroundColor = '#d93025';
+            }
+        }
+
+        function updateSkillTableBonuses() {
+            const tableRows = document.querySelectorAll('#skillReferenceTable tbody tr');
+
+            tableRows.forEach(row => {
+                const statKey = row.getAttribute('data-stat-key');
+                const bonusCell = row.querySelector('.skill-bonus');
+                const bonusInput = document.getElementById(statKey + '_bonus');
+
+                if (bonusInput && bonusCell) {
+                    bonusCell.textContent = bonusInput.value;
+                }
+            });
+        }
+
+        function applyRaceBonus(statKey) {
+            const bonusSpan = document.getElementById(statKey + '_race_bonus');
+            const valueInput = document.getElementById(statKey + '_val');
+
+            const bonusText = bonusSpan.textContent;
+            if (!bonusText || bonusText.trim() === "") {
+                alert("Bu istatistik için uygulanacak bir ırk bonusu bulunmuyor veya zaten uygulanmış.");
+                return;
+            }
+
+            const match = bonusText.match(/([+\-]?\d+)/);
+            if (!match) return;
+
+            const bonusAmount = parseInt(match[1]);
+            let currentValue = parseInt(valueInput.value) || 0;
+
+            currentValue += bonusAmount;
+            valueInput.value = currentValue;
+
+            calculateBonus(statKey);
+
+            bonusSpan.textContent = '';
+            raceBonusAppliedState[statKey] = true;
+
+            alert(`${statKey.toUpperCase()} istatistiğine ${bonusAmount > 0 ? '+' : ''}${bonusAmount} ırk bonusu başarıyla eklendi!`);
+        }
+
+        function updateCharacterSheet() {
+            const selectedClass = document.getElementById('sinif').value;
+            const selectedRace = document.getElementById('irk').value;
+            const canInput = document.getElementById('can');
+
+            let maxHP = 0;
+            let hpBonus = 0;
+
+            if (selectedClass) {
+                maxHP = CLASS_HP[selectedClass] || 0;
+            }
+
+            if (selectedRace && RACE_STAT_BONUSES[selectedRace]) {
+                hpBonus = RACE_STAT_BONUSES[selectedRace].hp || 0;
+
+                // Irk HP bonusu ekle
+                maxHP += hpBonus;
+            }
+
+            // Rütbe kaynaklı HP bonusu (Bronz: +0, sonraki her rütbe +10 HP)
+            const rankValue = document.getElementById('rutbe')?.value;
+            const rankHpBonus = getRankConfig(rankValue).hpBonus || 0;
+            maxHP += rankHpBonus;
+
+            // Dayanıklılık (Con) modifikatorü başına +10 HP ekle
+            const conVal = parseInt(document.getElementById('dayaniklilik_val')?.value) || 0;
+            const conMod = Math.floor((conVal - 10) / 2);
+            const hpFromCon = Math.max(0, conMod * 10);
+            maxHP += hpFromCon;
+
+            let finalCurrentHP = 0;
+            if (maxHP > 0) {
+                const hpParts = canInput.value.split('/');
+                let currentHP = 0;
+
+                if (hpParts.length === 2) {
+                    currentHP = parseInt(hpParts[0].trim()) || 0;
+                } else {
+                    currentHP = maxHP;
+                }
+
+                finalCurrentHP = Math.min(currentHP, maxHP);
+
+                canInput.value = `${finalCurrentHP} / ${maxHP} HP`;
+            } else {
+                canInput.value = '--- / ---';
+            }
+
+            updateHPBar(finalCurrentHP, maxHP);
+
+            if (selectedClass && CLASS_PRIORITIES[selectedClass]) {
+                // Stat anahtarını Türkçe ada çevir
+                const STAT_NAME_MAP = {
+                    "fiziksel_guc": "FİZİKSEL GÜÇ",
+                    "dayaniklilik": "DAYANIKLILIK",
+                    "bilgelik": "BİLGELİK",
+                    "ceviklik": "ÇEVİKLİK",
+                    "zeka": "ZEKA",
+                    "karizma": "KARİZMA"
+                };
+                const primaryStatName = STAT_NAME_MAP[CLASS_PRIORITIES[selectedClass]];
+                addPriorityStars([primaryStatName]);
+            } else {
+                clearPriorityStars();
+            }
+
+            updateRaceBonusDisplay(selectedRace);
+
+            ALL_STATS_KEYS.forEach(statKey => {
+                calculateBonus(statKey);
+            });
+
+            updateRankDependentFields();
+        }
+
+        function calculateBonus(statName) {
+            const valueInput = document.getElementById(statName + '_val');
+            const bonusInput = document.getElementById(statName + '_bonus');
+
+            let statValue = parseInt(valueInput.value) || 0;
+            const finalStatValue = statValue;
+
+            let bonus = Math.floor((finalStatValue - 10) / 2);
+
+            let bonusDisplay = bonus >= 0 ? '+' + bonus : String(bonus);
+            bonusInput.value = bonusDisplay;
+
+            updateSkillTableBonuses();
+        }
+
+        function rollSkillCheck(statKey, skillName) {
+            const bonusInput = document.getElementById(statKey + '_bonus');
+            const modal = document.getElementById('rollModal');
+            const modalResult = document.getElementById('modalResult');
+            const modalTitle = document.getElementById('modalTitle');
+            const rollDuration = 1000;
+
+            const bonusText = bonusInput ? bonusInput.value : '0';
+            const bonus = parseInt(bonusText) || 0;
+            const rankBonus = getRankDiceBonus();
+            const totalBonus = bonus + rankBonus;
+
+            modal.style.display = 'flex';
+            modalTitle.textContent = `${skillName} Yetenek Kontrolü`;
+
+            modalResult.classList.add('modal-rolling');
+            modalResult.textContent = 'Zar Atılıyor...';
+            modalResult.style.color = 'white';
+            modalResult.style.backgroundColor = 'transparent';
+
+            const animationInterval = setInterval(() => {
+                modalResult.textContent = Math.floor(Math.random() * 20) + 1;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+
+                const d20Roll = Math.floor(Math.random() * 20) + 1;
+                const totalResult = d20Roll + totalBonus;
+
+                modalResult.classList.remove('modal-rolling');
+
+                // STAT_MAP'i bu fonksiyonda manuel olarak tekrar tanımlıyoruz
+                const STAT_MAP_REVERSE = {
+                    "fiziksel_guc": "FİZİKSEL GÜÇ",
+                    "dayaniklilik": "DAYANIKLILIK",
+                    "bilgelik": "BİLGELİK",
+                    "ceviklik": "ÇEVİKLİK",
+                    "zeka": "ZEKA",
+                    "karizma": "KARİZMA"
+                };
+                const statNameTR = STAT_MAP_REVERSE[statKey];
+
+                let breakdown = `(Zar: ${d20Roll} ${bonus >= 0 ? '+' : ''}${bonus} ${statNameTR} Bonusu ${rankBonus >= 0 ? '+' : ''}${rankBonus} Rütbe Bonusu)`;
+                modalTitle.textContent = `${skillName}: ${breakdown}`;
+
+                if (d20Roll === 20) {
+                    modalResult.style.color = '#76ff03';
+                    modalResult.textContent = `KRİTİK BAŞARI! (${totalResult})`;
+                } else if (d20Roll === 1) {
+                    modalResult.style.color = '#ff1744';
+                    modalResult.textContent = `KRİTİK HATA! (${totalResult})`;
+                } else {
+                    modalResult.style.color = 'white';
+                    modalResult.textContent = totalResult;
+                }
+
+                document.getElementById('diceResult').textContent = `Son Yetenek Kontrolü: ${totalResult}`;
+                addDiceToHistory(`${skillName} (D20)`, totalResult);
+
+            }, rollDuration);
+        }
+
+        function rollBaseAttack() {
+            const selectedClass = document.getElementById('sinif').value;
+
+            if (!selectedClass || selectedClass === "") {
+                alert("Lütfen önce karakterin sınıfını seçin.");
+                return;
+            }
+
+            // CLASS_PRIORITIES'teki değer artık direkt stat anahtarı
+            const primaryStatKey = CLASS_PRIORITIES[selectedClass];
+
+            if (!primaryStatKey) {
+                alert("Seçilen sınıf için tanımlanmış bir Birincil İstatistik bulunamadı.");
+                return;
+            }
+
+            // Stat anahtarını Türkçe ada çevir
+            const STAT_NAME_MAP = {
+                "fiziksel_guc": "FİZİKSEL GÜÇ",
+                "dayaniklilik": "DAYANIKLILIK",
+                "bilgelik": "BİLGELİK",
+                "ceviklik": "ÇEVİKLİK",
+                "zeka": "ZEKA",
+                "karizma": "KARİZMA"
+            };
+            const primaryStatTR = STAT_NAME_MAP[primaryStatKey];
+
+            const bonusInput = document.getElementById(primaryStatKey + '_bonus');
+            const statBonus = parseInt(bonusInput ? bonusInput.value : 0) || 0;
+            const rankBonus = getRankDiceBonus();
+
+            const modal = document.getElementById('rollModal');
+            const modalResult = document.getElementById('modalResult');
+            const modalTitle = document.getElementById('modalTitle');
+            const rollDuration = 1000;
+
+            // Zar atma öncesinde hesapla
+            const d6Rolls = [];
+            for (let i = 0; i < 3; i++) {
+                d6Rolls.push(Math.floor(Math.random() * 6) + 1);
+            }
+            const totalRoll = d6Rolls.reduce((a, b) => a + b, 0);
+            const totalDamage = totalRoll + statBonus;
+
+            modal.style.display = 'flex';
+            modalTitle.textContent = `Temel Saldırı (3D6 + ${primaryStatTR})`;
+
+            modalResult.classList.add('modal-rolling');
+            modalResult.textContent = 'Hasar Hesaplanıyor...';
+            modalResult.style.color = 'white';
+            modalResult.style.backgroundColor = 'transparent';
+
+            const animationInterval = setInterval(() => {
+                // Animasyon sırasında rastgele toplam göster
+                modalResult.textContent = Math.floor(Math.random() * 18) + 1 + statBonus;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+
+                modalResult.classList.remove('modal-rolling');
+
+                const breakdown = `(${d6Rolls.join(' + ')} Zar  ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} BONUSU)`;
+
+                modalTitle.textContent = `Temel Hasar: ${breakdown}`;
+                modalResult.textContent = totalDamage;
+                modalResult.style.color = '#fffae6';
+                modalResult.style.backgroundColor = '#d93025';
+
+                document.getElementById('diceResult').textContent = `Son Saldırı Hasarı: ${totalDamage}`;
+                addDiceToHistory('Temel Saldırı (3D6)', totalDamage);
+
+            }, rollDuration);
+        }
+
+        function rollMultipleDice(sides) {
+            const countInput = document.getElementById(`diceCount-${sides}`);
+            const count = Math.max(1, parseInt(countInput?.value) || 1);
+            const rolls = [];
+            for (let i = 0; i < count; i++) {
+                rolls.push(Math.floor(Math.random() * sides) + 1);
+            }
+
+            const totalRoll = rolls.reduce((acc, curr) => acc + curr, 0);
+            const rankBonus = getRankDiceBonus();
+            const totalResult = totalRoll + rankBonus;
+
+            const modal = document.getElementById('rollModal');
+            const modalResult = document.getElementById('modalResult');
+            const modalTitle = document.getElementById('modalTitle');
+            const rollDuration = 1000;
+
+            modal.style.display = 'flex';
+            modalTitle.textContent = `D${sides} x${count} Atışı`;
+
+            modalResult.classList.add('modal-rolling');
+            modalResult.textContent = 'Zar Atılıyor...';
+            modalResult.style.color = 'white';
+            modalResult.style.backgroundColor = 'transparent';
+
+            const animationInterval = setInterval(() => {
+                modalResult.textContent = Math.floor(Math.random() * sides) + 1;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+                modalResult.classList.remove('modal-rolling');
+
+                const rankBonusLabel = rankBonus >= 0 ? `+${rankBonus}` : `${rankBonus}`;
+                const breakdown = `(${rolls.join(' + ')} Zar + ${rankBonusLabel} Rütbe Bonusu)`;
+                modalTitle.textContent = `Toplam: ${breakdown}`;
+                modalResult.textContent = totalResult;
+                modalResult.style.color = '#ffc107';
+                modalResult.style.backgroundColor = '#222';
+                document.getElementById('diceResult').textContent = `Son D${sides} Atışı: ${totalResult}`;
+                addDiceToHistory(`D${sides} x${count}`, totalResult);
+
+            }, rollDuration);
+        }
+
+        function updateHP(amount, operation) {
+            const canInput = document.getElementById('can');
+            const valueInput = document.getElementById('hpValueInput');
+
+            let amountToChange = parseInt(valueInput.value) || 0;
+
+            const hpParts = canInput.value.split('/');
+            let currentHP = parseInt(hpParts[0].trim()) || 0;
+            const maxHP = parseInt(hpParts[1].trim()) || 0;
+
+            if (maxHP === 0) {
+                alert("Önce sınıf ve ırk seçerek Maksimum Canı (Max HP) belirleyin.");
+                return;
+            }
+
+            if ((operation === 'damage' || operation === 'heal') && amountToChange === 0) {
+                alert("Lütfen Hasar/İyileştirme için bir değer girin.");
+                return;
+            }
+
+            if (operation === 'damage') {
+                currentHP = Math.max(0, currentHP - amountToChange);
+            } else if (operation === 'heal') {
+                currentHP = Math.min(maxHP, currentHP + amountToChange);
+            } else if (operation === 'shortRest') {
+                const healAmount = Math.ceil(maxHP / 2);
+                currentHP = Math.min(maxHP, currentHP + healAmount);
+                alert(`Kısa Dinlenme: ${healAmount} HP iyileştirildi.`);
+            } else if (operation === 'longRest') {
+                currentHP = maxHP;
+                alert("Uzun Dinlenme: Can tam olarak yenilendi.");
+            }
+
+            canInput.value = `${currentHP} / ${maxHP} HP`;
+            updateHPBar(currentHP, maxHP);
+
+            if (operation === 'damage' || operation === 'heal') {
+                valueInput.value = '';
+            }
+        }
+
+        // --- BAŞLANGIÇ YÜKLEME VE EVENT LISTENER'LAR ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').textContent = '☀️ Gündüz Modu Aç';
+            }
+
+            populateDropdowns();
+            updateRankDependentFields();
+
+            // Uygulama her zaman Ana Menü ile başlar
+            showMainMenu();
+        });
+
+        document.getElementById('damageButton').addEventListener('click', () => updateHP(0, 'damage'));
+        document.getElementById('healButton').addEventListener('click', () => updateHP(0, 'heal'));
+        document.getElementById('shortRestButton').addEventListener('click', () => updateHP(0, 'shortRest'));
+        document.getElementById('longRestButton').addEventListener('click', () => updateHP(0, 'longRest'));
+        const rankSelect = document.getElementById('rutbe');
+        if (rankSelect) {
+            // When rank changes, update dependent fields AND recalculate the character sheet (HP etc.)
+            rankSelect.addEventListener('change', function () { updateRankDependentFields(); updateCharacterSheet(); });
+        }
+
+        document.getElementById('rollButton').addEventListener('click', function () {
+            // Mevcut düz D20 atışı işlevi
+            const modal = document.getElementById('rollModal');
+            const modalResult = document.getElementById('modalResult');
+            const modalTitle = document.getElementById('modalTitle');
+            const rollDuration = 1000;
+
+            modal.style.display = 'flex';
+            modalTitle.textContent = `Düz D20 Zar Atışı`;
+
+            modalResult.classList.add('modal-rolling');
+            modalResult.textContent = 'Zar Atılıyor...';
+            modalResult.style.color = 'white';
+            modalResult.style.backgroundColor = 'transparent';
+
+            const animationInterval = setInterval(() => {
+                modalResult.textContent = Math.floor(Math.random() * 20) + 1;
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+                const result = Math.floor(Math.random() * 20) + 1;
+                const rankBonus = getRankDiceBonus();
+                const totalResult = result + rankBonus;
+                const rankBonusLabel = rankBonus >= 0 ? `+${rankBonus}` : `${rankBonus}`;
+
+                modalResult.classList.remove('modal-rolling');
+                modalTitle.textContent = `D20 Sonucu (Zar: ${result} ${rankBonusLabel} Rütbe Bonusu)`;
+
+                if (result === 20) {
+                    modalResult.style.color = '#76ff03';
+                    modalResult.textContent = `KRİTİK BAŞARI! (${totalResult})`;
+                } else if (result === 1) {
+                    modalResult.style.color = '#ff1744';
+                    modalResult.textContent = `KRİTİK HATA! (${totalResult})`;
+                } else {
+                    modalResult.style.color = 'white';
+                    modalResult.textContent = totalResult;
+                }
+                modalResult.style.backgroundColor = 'transparent';
+                document.getElementById('diceResult').textContent = `Son D20 Atışı: ${totalResult}`;
+                addDiceToHistory('D20', totalResult);
+
+            }, rollDuration);
+        });
+
+        document.querySelectorAll('.multi-dice-btn').forEach(btn => {
+            const sides = parseInt(btn.dataset.dice, 10);
+            if (isNaN(sides)) {
+                return;
+            }
+            btn.addEventListener('click', () => rollMultipleDice(sides));
+        });
+
+        document.getElementById('baseAttackButton').addEventListener('click', rollBaseAttack);
+
+        document.getElementById('rollModal').addEventListener('click', function (event) {
+            if (event.target.id === 'rollModal' || event.target.id === 'modalResult') {
+                this.style.display = 'none';
+            }
+        });
+
+        // KARAKTER DIŞA AKTARMA FONKSİYONU
+        function exportCharacter(name) {
+            let characterData = {};
+            let exportName = name;
+
+            if (name) {
+                // Listeden gelen karakteri dışa aktar
+                const dataKey = getCharacterDataKey(name);
+                const storedData = localStorage.getItem(dataKey);
+                if (!storedData) {
+                    alert('Karakter verisi bulunamadı.');
+                    return;
+                }
+                characterData = JSON.parse(storedData);
+            } else {
+                // Şu an açık olan karakteri dışa aktar
+                exportName = document.getElementById('isim').value || 'Karakter';
+                const formElements = document.querySelectorAll('#characterSheetContainer input, #characterSheetContainer select, #characterSheetContainer textarea');
+                formElements.forEach(element => {
+                    if (element.id && element.id !== 'hpValueInput') {
+                        characterData[element.id] = element.type === 'checkbox' ? element.checked : element.value;
+                    }
+                });
+                characterData['raceBonusAppliedState'] = raceBonusAppliedState;
+                const profilePic = document.getElementById('profilePicDisplay').src;
+                if (profilePic && profilePic.startsWith('data:image')) {
+                    characterData['profilFoto'] = profilePic;
+                }
+            }
+
+            try {
+                const dataStr = JSON.stringify(characterData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${exportName.replace(/\s+/g, '_')}_karakter.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                alert('✅ Karakter başarıyla dışa aktarıldı!');
+            } catch (error) {
+                alert('❌ Hata: ' + error.message);
+            }
+        }
+
+        // KARAKTER İÇE AKTARMA FONKSİYONU
+        function importCharacterFromFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const characterData = JSON.parse(event.target.result);
+
+                        // Tüm verileri form alanlarına yükle
+                        for (const id in characterData) {
+                            if (id === 'raceBonusAppliedState') {
+                                raceBonusAppliedState = characterData[id];
+                                continue;
+                            }
+
+                            if (id === 'profilFoto') {
+                                const display = document.getElementById('profilePicDisplay');
+                                const placeholder = document.getElementById('profilePicPlaceholder');
+                                if (characterData[id]) {
+                                    display.src = characterData[id];
+                                    display.style.display = 'block';
+                                    placeholder.style.display = 'none';
+                                } else {
+                                    display.src = '';
+                                    display.style.display = 'none';
+                                    placeholder.style.display = 'flex';
+                                }
+                                continue;
+                            }
+
+                            const element = document.getElementById(id);
+                            if (element) {
+                                if (element.type === 'checkbox') {
+                                    element.checked = !!characterData[id];
+                                } else if (element.type !== 'file') { // Dosya inputlarına değer atanamaz
+                                    element.value = characterData[id];
+                                }
+                            }
+                        }
+
+                        // Karakteri göster ve güncelle
+                        showCharacterSheet(false);
+                        updateCharacterSheet();
+
+                        alert('✅ Karakter başarıyla yüklendi!');
+                    } catch (error) {
+                        alert('❌ Dosya yüklenirken hata oluştu: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+    </script>
+
+</body>
+
+</html>

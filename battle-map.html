@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Map - FRP Savaş Haritası</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .controls {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid #333;
+        }
+
+        .grid-canvas {
+            flex: 1;
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .grid-canvas canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #drawingCanvas {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 1000 !important;
+            cursor: crosshair !important;
+            pointer-events: none;
+        }
+
+        .token {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            color: white;
+            border: 3px solid white;
+            user-select: none;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            transition: transform 0.2s ease;
+        }
+
+        .token.boss-token {
+            width: 100px;
+            height: 100px;
+        }
+
+        .token:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .token:active {
+            cursor: grabbing;
+            z-index: 1000;
+        }
+
+        .token {
+            /* overflow: hidden;  <-- REMOVED to allow labels to show outside */
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            /* Ensure round shape */
+        }
+
+        .token-label {
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: center;
+            white-space: normal;
+            width: 120px;
+            /* Genişletildi */
+            word-break: break-word;
+            line-height: 1.2;
+            pointer-events: none;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 4px rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 20;
+        }
+
+        .boss-token .token-label {
+            top: 105px;
+            width: 150px;
+            /* Genişletildi */
+        }
+
+        .player-token {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-color: #3498db;
+        }
+
+        .mob-token {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            border-color: #e67e22;
+        }
+
+        .boss-token {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-color: #e74c3c;
+        }
+
+        .token-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5;
+            /* Fotoğraf en üstte olmalı */
+            pointer-events: none;
+        }
+
+        .token-content {
+            position: relative;
+            z-index: 10;
+            /* Yazılar fotoğrafın da üstünde olmalı */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .boss-name {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            overflow-y: auto;
+            margin-left: 20px;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: #f1c40f;
+        }
+
+        .entity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .entity-item {
+            background: #252525;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #888;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .entity-item:hover {
+            background: #2a2a2a;
+        }
+
+        .entity-item.player {
+            border-left-color: #3498db;
+        }
+
+        .entity-item.mob {
+            border-left-color: #e67e22;
+        }
+
+        .entity-item.boss {
+            border-left-color: #e74c3c;
+        }
+
+        .entity-name {
+            font-weight: bold;
+        }
+
+        .entity-hp {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .entity-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .entity-thumb {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid #555;
+            background-size: cover;
+            background-position: center;
+            background-color: #333;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background: #27ae60;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #229954;
+        }
+
+        .btn-secondary {
+            background: #3498db;
+        }
+
+        .btn-secondary:hover {
+            background: #2980b9;
+        }
+
+        .btn-danger {
+            background: #c0392b;
+        }
+
+        .btn-danger:hover {
+            background: #a93226;
+        }
+
+        .info-box {
+            background: #252525;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #f1c40f;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .drawing-tools {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-top: 15px;
+        }
+
+        .drawing-tools h4 {
+            color: #f1c40f;
+            margin-bottom: 12px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tool-btn {
+            padding: 10px 8px;
+            background: #3498db;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .tool-btn:hover {
+            background: #2980b9;
+        }
+
+        .tool-btn.active {
+            border-color: #f1c40f;
+            background: #e67e22;
+        }
+
+        .tool-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .color-control {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .color-control label {
+            color: #aaa;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            padding: 2px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .size-control {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .size-control label {
+            color: #aaa;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .size-slider {
+            width: 100%;
+            height: 6px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 6px;
+        }
+
+        .eraser-cursor {
+            position: absolute;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            z-index: 2000;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body onload="initBattleMap()">
+
+    <div class="map-container">
+        <div class="controls">
+            <button onclick="loadCharactersFromGM()" class="btn-secondary">📥 GM'den Yükle</button>
+            <button onclick="uploadMapImage()" class="btn-secondary" style="background: #8e44ad;">🗺️ Harita
+                Yükle</button>
+            <input type="file" id="mapUpload" accept="image/*" style="display: none;" onchange="handleMapUpload(event)">
+            <button onclick="clearMap()" class="btn-danger">🗑️ Haritayı Temizle</button>
+            <select id="gridSize" onchange="changeGridSize()">
+                <option value="50">Ufak Grid (50px)</option>
+                <option value="60" selected>Orta Grid (60px)</option>
+                <option value="80">Büyük Grid (80px)</option>
+            </select>
+            <span id="distance" style="color: #f1c40f; font-weight: bold;"></span>
+        </div>
+
+        <div class="grid-canvas" id="gridCanvas" tabindex="0">
+            <canvas id="mapCanvas"></canvas>
+            <div id="tokensContainer"></div>
+            <div id="eraserCursor" class="eraser-cursor"></div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <h3>⚔️ KARAKTERLER</h3>
+        <div class="entity-list" id="entityList"></div>
+
+        <div class="drawing-tools">
+            <h4>🖌️ ÇİZİM ARAÇLARI</h4>
+            <div class="tools-grid">
+                <button class="tool-btn" onclick="setDrawingTool('pen')">✏️ Kalem</button>
+                <button class="tool-btn" onclick="setDrawingTool('eraser')">🧽 Silgi</button>
+                <button class="tool-btn" onclick="setDrawingTool('move')">✋ Taşı</button>
+                <button class="tool-btn" onclick="setDrawingTool('line')">📏 Çizgi</button>
+                <button class="tool-btn" onclick="setDrawingTool('rect')">⬜ Dikdörtgen</button>
+                <button class="tool-btn" onclick="setDrawingTool('circle')">⭕ Daire</button>
+            </div>
+            <div class="tool-controls">
+                <div class="color-control">
+                    <label>🎨 Renk:</label>
+                    <input type="color" id="drawColor" class="color-picker" value="#f1c40f">
+                </div>
+                <div class="size-control">
+                    <label>📏 Kalınlık: <span id="sizeDisplay">3</span>px</label>
+                    <input type="range" id="drawSize" class="size-slider" min="1" max="20" value="3"
+                        oninput="updateSizeDisplay()">
+                </div>
+            </div>
+            <button onclick="clearDrawing()" class="btn-danger" style="width: 100%; margin-top: 12px;">🗑️ Çizimi
+                Sil</button>
+        </div>
+    </div>
+
+    <script>
+        let gridSize = 60;
+        let characters = [];
+        let selectedTokens = [];
+        let draggingToken = null;
+        let offsetX = 0, offsetY = 0;
+
+        let drawingTool = null;
+        let isDrawing = false;
+        let startX = 0, startY = 0;
+        let drawingCanvas = null;
+        let drawingCtx = null;
+        let drawnPaths = [];
+        let mapCanvas = null;
+        let mapCtx = null;
+        let backgroundImage = null;
+
+        // Token positions storage
+        let tokenPositions = {};
+
+        function initBattleMap() {
+            console.log('=== initBattleMap started ===');
+            const container = document.querySelector('.grid-canvas');
+            console.log('Container:', container);
+            if (!container) {
+                console.error('Grid canvas container not found!');
+                return;
+            }
+
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            console.log('Container size:', containerWidth, 'x', containerHeight);
+
+            // Grid Canvas
+            mapCanvas = document.getElementById('mapCanvas');
+            console.log('Map canvas:', mapCanvas);
+            mapCanvas.width = containerWidth;
+            mapCanvas.height = containerHeight;
+            mapCtx = mapCanvas.getContext('2d');
+
+            // Drawing Canvas
+            if (!drawingCanvas) {
+                console.log('Creating drawing canvas...');
+                drawingCanvas = document.createElement('canvas');
+                drawingCanvas.id = 'drawingCanvas';
+                drawingCanvas.width = containerWidth;
+                drawingCanvas.height = containerHeight;
+                container.appendChild(drawingCanvas);
+                console.log('Drawing canvas created and appended');
+
+                // Event listeners with proper this binding
+                drawingCanvas.addEventListener('mousedown', startDrawing);
+                drawingCanvas.addEventListener('mousemove', draw);
+                drawingCanvas.addEventListener('mouseup', stopDrawing);
+                drawingCanvas.addEventListener('mouseleave', stopDrawing);
+                console.log('Event listeners attached');
+
+                drawingCtx = drawingCanvas.getContext('2d');
+            }
+
+            // localStorage değişikliklerini dinle
+            window.addEventListener('storage', onStorageChange);
+
+            // Ekstra: Her 1 saniyede bir kontrol et (iframe'ler arası sync için)
+            setInterval(() => {
+                const saved = localStorage.getItem('battlefieldData');
+                if (saved && characters.length > 0) {
+                    const current = JSON.stringify(characters);
+                    if (current !== saved) {
+                        console.log('Auto-syncing characters...');
+                        updateCharactersFromGM();
+                    }
+                }
+            }, 1000);
+
+            drawGrid();
+            console.log('=== initBattleMap completed ===');
+        }
+
+        // localStorage değişikliklerini dinle ve otomatik güncelle
+        function onStorageChange(e) {
+            console.log('Storage changed:', e.key);
+            if (e.key === 'battlefieldData') {
+                console.log('Battlefield data updated, refreshing...');
+                updateCharactersFromGM();
+            }
+        }
+
+        // HP ve varlık güncellemesi için
+        function updateCharactersFromGM() {
+            const saved = localStorage.getItem('battlefieldData');
+            if (!saved) return;
+
+            const updatedCharacters = JSON.parse(saved);
+
+            // Karakterlerin sayısı değişmişse (silme/ekleme) tüm UI'ı yeniden oluştur
+            if (updatedCharacters.length !== characters.length) {
+                console.log('Character count changed, rebuilding tokens...');
+
+                // Konumları kaydet
+                // Konumları kaydet (ID öncelikli, yoksa İsim)
+                const positions = {};
+                characters.forEach((char, idx) => {
+                    const tokens = document.querySelectorAll('.token');
+                    // tokens[idx] varsayımı riskli olabilir, dataset.index'e güvenelim
+                    const token = document.querySelector(`.token[data-index="${idx}"]`);
+
+                    if (token) {
+                        const key = char.id || char.name; // ID varsa onu kullan, yoksa isim (eski)
+                        positions[key] = {
+                            x: parseInt(token.style.left),
+                            y: parseInt(token.style.top)
+                        };
+                    }
+                });
+
+                characters = updatedCharacters;
+                const container = document.getElementById('tokensContainer');
+                container.innerHTML = '';
+
+                // Token'ları yeniden oluştur
+                characters.forEach((char, index) => {
+                    const token = document.createElement('div');
+                    token.className = `token ${char.type}-token`;
+                    token.dataset.index = index;
+
+                    // Önceki konumunu geri yükle
+                    const tokenSize = char.type === 'boss' ? 100 : 70;
+                    const posKey = char.id || char.name;
+
+                    if (positions[posKey]) {
+                        token.style.left = positions[posKey].x + 'px';
+                        token.style.top = positions[posKey].y + 'px';
+                    } else if (positions[char.name] && !char.id) {
+                        // ID yoksa ve isimle eşleşme varsa (eski kayıtlar için fallback)
+                        token.style.left = positions[char.name].x + 'px';
+                        token.style.top = positions[char.name].y + 'px';
+                    } else {
+                        // Yeni bir varlık veya klon, varsayılan konum (biraz kaydırarak)
+                        // Klonların üst üste binmemesi için hafif offset ekleyelim
+                        const offset = (index % 5) * 15;
+                        token.style.left = (50 + index * (tokenSize + 10) + offset) + 'px';
+                        token.style.top = (50 + offset) + 'px';
+                    }
+
+                    let hpDisplay = '';
+                    const cType = (char.type || '').toString().toLowerCase().trim();
+
+                    // hpDisplay'i boş bırakıyoruz, isim artık altta olacak.
+
+
+                    const imgHtml = char.img ? `<img src="${char.img}" class="token-img">` : '';
+                    // Fotoğraf varsa token arkası rengini şeffaf yapabiliriz ama çerçeve kalmalı
+                    token.innerHTML = `${imgHtml}<div class="token-content">${hpDisplay}</div>`;
+
+                    // Tüm tipler için etiket oluştur
+                    const nameLabel = document.createElement('div');
+                    nameLabel.className = 'token-label';
+                    if (cType === 'player') {
+                        nameLabel.innerHTML = `<div style="font-weight: bold; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 3px; margin-bottom: 3px; font-size: 1.1em;">${char.name}</div><div style="color: #ff4d4d; font-size: 1.05em; font-weight: 900; text-shadow: 1px 1px 2px black;">❤️ ${char.hp}/${char.maxHp}</div>`;
+                    } else {
+                        // Mob ve Boss için sadece isim (şimdilik)
+                        nameLabel.innerHTML = `<div style="font-weight: bold; font-size: 1rem; color: ${cType === 'boss' ? '#ffd700' : 'white'}; text-shadow: 1px 1px 2px black;">${char.name}</div>`;
+                    }
+                    nameLabel.title = `${char.name} (${char.type.toUpperCase()})`;
+                    token.appendChild(nameLabel);
+
+                    token.title = `${char.name} (${char.type.toUpperCase()})`;
+                    token.addEventListener('mousedown', startDrag);
+                    token.addEventListener('click', selectToken);
+                    container.appendChild(token);
+                });
+            } else {
+                // Sayı aynıysa sadece HP ve varlık bilgisini güncelle
+                updatedCharacters.forEach((newChar, index) => {
+                    if (characters[index]) {
+                        characters[index].hp = newChar.hp;
+                        characters[index].maxHp = newChar.maxHp;
+                        characters[index].img = newChar.img;
+                        // ID ve diğer statikler değişmez, gerekirse cậpncelle
+                        if (newChar.id) characters[index].id = newChar.id;
+                    }
+                });
+
+                // HTML'deki token'ları güncelle (HP vb)
+                document.querySelectorAll('.token').forEach((token, index) => {
+                    if (characters[index]) {
+                        const char = characters[index];
+                        const cType = (char.type || '').toString().toLowerCase().trim();
+                        console.log(`Rendering token: ${char.name}, Type: ${cType}, HasImg: ${!!char.img}`); // DEBUG
+                        let hpDisplay = '';
+
+                        // Boss ve Mob için token içi metin (istenirse)
+                        // Boss ve Mob için token içi metin (istenirse) - İPTAL
+                        // hpDisplay boş kalacak
+
+
+                        const innerDiv = token.querySelector('.token-content');
+                        if (innerDiv) {
+                            if (cType === 'player') {
+                                innerDiv.innerHTML = ''; // KESİN TEMİZLİK
+                            } else {
+                                innerDiv.innerHTML = hpDisplay;
+                            }
+                        }
+
+                        // Resim güncelleme (En üst katmana zorla)
+                        let imgTag = token.querySelector('.token-img');
+                        if (char.img) {
+                            if (!imgTag) {
+                                imgTag = document.createElement('img');
+                                imgTag.className = 'token-img';
+                                token.insertBefore(imgTag, token.firstChild);
+                            }
+                            imgTag.src = char.img;
+                        } else if (imgTag) {
+                            imgTag.remove();
+                        }
+
+                        // Etiket güncelleme (Oyuncu HP'si buraya)
+                        // Etiket güncelleme (Tüm tipler için)
+                        let nameLabel = token.querySelector('.token-label');
+                        if (!nameLabel) {
+                            nameLabel = document.createElement('div');
+                            nameLabel.className = 'token-label';
+                            token.appendChild(nameLabel);
+                        }
+
+                        if (cType === 'player') {
+                            nameLabel.innerHTML = `<div style="font-weight: bold; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 3px; margin-bottom: 3px; font-size: 1.1em;">${char.name}</div><div style="color: #ff4d4d; font-size: 1.05em; font-weight: 900; text-shadow: 1px 1px 2px black;">❤️ ${char.hp}/${char.maxHp}</div>`;
+                        } else {
+                            nameLabel.innerHTML = `<div style="font-weight: bold; font-size: 1rem; color: ${cType === 'boss' ? '#ffd700' : 'white'}; text-shadow: 1px 1px 2px black;">${char.name}</div>`;
+                        }
+
+                        token.title = `${char.name} (${char.type.toUpperCase()})`;
+                    }
+                });
+            }
+
+            updateEntityList();
+        }
+
+        function drawGrid() {
+            const canvas = mapCanvas;
+            const ctx = mapCtx;
+            if (!ctx) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Arkaplan resmi varsa çiz
+            if (backgroundImage) {
+                // Resmi canvas'a sığdıracak şekilde çiz (aspect ratio koruyarak veya sığdırarak)
+                // Şimdilik canvas'ı kaplayacak şekilde çizelim
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; // Resim varken daha belirgin beyaz
+                ctx.lineWidth = 1.5;
+            } else {
+                ctx.strokeStyle = '#444'; // Resim yokken koyu gri
+                ctx.lineWidth = 1.2;
+            }
+
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function uploadMapImage() {
+            document.getElementById('mapUpload').click();
+        }
+
+        function handleMapUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    backgroundImage = img;
+                    drawGrid();
+                    console.log('Map image loaded successfully');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadCharactersFromGM() {
+            const saved = localStorage.getItem('battlefieldData');
+            if (!saved) {
+                alert('⚠️ GM Kontrol Panelinde veri kaydedin!');
+                return;
+            }
+
+            characters = JSON.parse(saved);
+            const savedPositions = localStorage.getItem('battleMapPositions');
+            if (savedPositions) {
+                tokenPositions = JSON.parse(savedPositions);
+                console.log('Loaded saved positions:', tokenPositions);
+            }
+
+            const container = document.getElementById('tokensContainer');
+            container.innerHTML = '';
+
+            characters.forEach((char, index) => {
+                const token = document.createElement('div');
+                token.className = `token ${char.type}-token`;
+                token.dataset.index = index;
+
+                // Boss'lar daha büyük
+                const tokenSize = char.type === 'boss' ? 100 : 70;
+
+                // Önceki konumunu kullan, yoksa default
+                if (tokenPositions[char.name]) {
+                    token.style.left = tokenPositions[char.name].x + 'px';
+                    token.style.top = tokenPositions[char.name].y + 'px';
+                } else {
+                    token.style.left = (50 + index * (tokenSize + 10)) + 'px';
+                    token.style.top = '50px';
+                }
+
+                let hpDisplay;
+                if (char.type === 'player') {
+                    const hpLength = char.hp.toString().length;
+                    const fontSize = hpLength <= 2 ? '0.95rem' : hpLength === 3 ? '0.85rem' : '0.75rem';
+                    hpDisplay = `<div style="font-size: ${fontSize}; font-weight: bold; color: #ff6b6b; line-height: 1;">❤️${char.hp}</div>`;
+                } else if (char.type === 'boss') {
+                    hpDisplay = `<div class="boss-name" style="font-size: 0.85rem; word-break: break-word; line-height: 1.1; color: #ffd700;">${char.name}</div>`;
+                } else {
+                    hpDisplay = '';
+                }
+
+                token.innerHTML = `<div style="text-align: center; width: 100%; display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; height: 100%;">
+                ${hpDisplay}
+            </div>`;
+
+                // Oyuncular ve moblar için isim etiketini alt kısımda göster
+                if (char.type === 'player' || char.type === 'mob') {
+                    const nameLabel = document.createElement('div');
+                    nameLabel.className = 'token-label';
+                    nameLabel.textContent = char.name;
+                    nameLabel.title = `${char.name} (${char.type.toUpperCase()})`;
+                    token.appendChild(nameLabel);
+                }
+
+                token.title = `${char.name} (${char.type.toUpperCase()})`;
+
+                token.addEventListener('mousedown', startDrag);
+                token.addEventListener('click', selectToken);
+                container.appendChild(token);
+            });
+
+            updateEntityList();
+            alert('✅ ' + characters.length + ' karakter yüklendi!');
+        }
+
+        function startDrag(e) {
+            draggingToken = this;
+            const rect = this.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            draggingToken.style.zIndex = '1000';
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function drag(e) {
+            if (!draggingToken) return;
+            const container = document.querySelector('.grid-canvas');
+            const rect = container.getBoundingClientRect();
+            let x = e.clientX - rect.left - offsetX;
+            let y = e.clientY - rect.top - offsetY;
+
+            x = Math.max(0, Math.min(x, container.offsetWidth - 70));
+            y = Math.max(0, Math.min(y, container.offsetHeight - 70));
+
+            draggingToken.style.left = x + 'px';
+            draggingToken.style.top = y + 'px';
+        }
+
+        function stopDrag() {
+            if (draggingToken) {
+                draggingToken.style.zIndex = '100';
+
+                // Token'ın konumunu kaydet
+                const index = parseInt(draggingToken.dataset.index);
+                if (characters[index]) {
+                    const x = parseInt(draggingToken.style.left);
+                    const y = parseInt(draggingToken.style.top);
+                    tokenPositions[characters[index].name] = { x, y };
+
+                    // localStorage'a kaydet
+                    localStorage.setItem('battleMapPositions', JSON.stringify(tokenPositions));
+                    console.log('Position saved for', characters[index].name, ':', { x, y });
+                }
+            }
+            draggingToken = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function selectToken(e) {
+            if (e.ctrlKey || e.metaKey) {
+                this.style.outline = selectedTokens.includes(this) ? 'none' : '3px solid #f1c40f';
+                if (selectedTokens.includes(this)) {
+                    selectedTokens = selectedTokens.filter(t => t !== this);
+                } else {
+                    selectedTokens.push(this);
+                }
+                calculateDistance();
+            }
+        }
+
+        function calculateDistance() {
+            const distanceEl = document.getElementById('distance');
+            if (selectedTokens.length !== 2) {
+                distanceEl.innerHTML = '';
+                return;
+            }
+
+            const pos1 = { x: parseInt(selectedTokens[0].style.left), y: parseInt(selectedTokens[0].style.top) };
+            const pos2 = { x: parseInt(selectedTokens[1].style.left), y: parseInt(selectedTokens[1].style.top) };
+
+            const gridDistance = Math.max(
+                Math.abs(Math.round((pos2.x - pos1.x) / gridSize)),
+                Math.abs(Math.round((pos2.y - pos1.y) / gridSize))
+            );
+
+            distanceEl.innerHTML = `📏 Mesafe: ${gridDistance} kare`;
+        }
+
+        function changeGridSize() {
+            gridSize = parseInt(document.getElementById('gridSize').value);
+            drawGrid();
+        }
+
+        function updateEntityList() {
+            const list = document.getElementById('entityList');
+            list.innerHTML = '';
+            characters.forEach((char) => {
+                const item = document.createElement('div');
+                item.className = `entity-item ${char.type}`;
+
+                let statsHtml = '';
+                // Tip kontrolünü daha esnek yapalım (küçük/büyük harf veya boşluklara karşı)
+                const cType = (char.type || '').toString().toLowerCase().trim();
+
+                if (cType === 'player') {
+                    statsHtml = `<div class="entity-hp">❤️ ${char.hp}/${char.maxHp}</div>`;
+                } else {
+                    statsHtml = `<div class="entity-hp" style="color: #999;">❤️ ??? / ??? | 🛡️ AC: ??</div>`;
+                }
+
+                const thumbImg = char.img ? `style="background-image: url('${char.img}')"` : '';
+                const thumbEmoji = char.img ? '' : (char.type === 'player' ? '👤' : char.type === 'mob' ? '👾' : '💀');
+
+                item.innerHTML = `
+                    <div class="entity-item-content">
+                        <div class="entity-thumb" ${thumbImg}>${thumbEmoji}</div>
+                        <div>
+                            <div class="entity-name">${char.name}</div>
+                            ${statsHtml}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function clearMap() {
+            if (confirm('Haritayı ve arkaplanı temizlemek istediğinize emin misiniz?')) {
+                document.getElementById('tokensContainer').innerHTML = '';
+                selectedTokens = [];
+                characters = [];
+                backgroundImage = null;
+                localStorage.removeItem('battleMapPositions');
+                drawGrid();
+            }
+        }
+
+        // ========== OTOMATIK SİNC SİSTEMİ ==========
+        // GM Kontrol panelinde karakter verileri değiştirilirse:
+        // 1. localStorage.setItem('battlefieldData', JSON.stringify(characters)); çağrılmalı
+        // 2. Battle Map otomatik olarak güncellenecek (HP, AC, varlık durumu vb)
+        // 3. Token konumları korunacak (battleMapPositions localStorage'da kaydediliyor)
+
+        // localStorage dinleme fonksiyonu
+
+        function setDrawingTool(tool) {
+            // Eğer aynı araca tıklandıysa kapat (toggle), değilse yeni aracı seç
+            if (drawingTool === tool) {
+                drawingTool = null;
+            } else {
+                drawingTool = tool;
+            }
+
+            // Tüm butonların aktifliğini kaldır
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+
+            // Drawing canvas'ın pointer-events'ini kontrol et
+            if (drawingCanvas) {
+                // Çizim yapan araçlar: pen, line, rect, circle, eraser. 
+                // Bu araçlar seçiliyken canvas'a tıklanabilmeli (pointer-events: auto).
+                // 'move' modu veya hiçbir şey seçili değilse (null), canvas arkasına (tokenlara) tıklanabilmeli (pointer-events: none).
+                const isDrawingMode = ['pen', 'line', 'rect', 'circle', 'eraser'].includes(drawingTool);
+                drawingCanvas.style.pointerEvents = isDrawingMode ? 'auto' : 'none';
+
+                // Cursor ayarı
+                if (drawingTool === 'eraser') {
+                    drawingCanvas.style.cursor = 'cell';
+                } else if (isDrawingMode) {
+                    drawingCanvas.style.cursor = 'crosshair';
+                } else if (drawingTool === 'move') {
+                    // Move modunda canvas pasif olduğu için cursor token üzerindeyken çalışır, 
+                    // ama yine de canvas stilini default yapalım
+                    drawingCanvas.style.cursor = 'default';
+                }
+            }
+
+            // Aktif butonu işaretle
+            if (drawingTool) {
+                // Silgi imlecini göster/gizle
+                const eraserCursor = document.getElementById('eraserCursor');
+                if (eraserCursor) {
+                    eraserCursor.style.display = drawingTool === 'eraser' ? 'block' : 'none';
+                    if (drawingTool === 'eraser') updateSizeDisplay();
+                }
+
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    const text = btn.textContent;
+                    let isActive = false;
+
+                    if (drawingTool === 'pen' && text.includes('✏️')) isActive = true;
+                    else if (drawingTool === 'eraser' && text.includes('🧽')) isActive = true;
+                    else if (drawingTool === 'line' && text.includes('📏')) isActive = true;
+                    else if (drawingTool === 'rect' && text.includes('⬜')) isActive = true;
+                    else if (drawingTool === 'circle' && text.includes('⭕')) isActive = true;
+                    else if (drawingTool === 'move' && text.includes('✋')) isActive = true;
+
+                    if (isActive) btn.classList.add('active');
+                });
+                console.log('Drawing tool set to:', drawingTool);
+            } else {
+                console.log('Drawing tool deactivated');
+            }
+        }
+
+        function startDrawing(e) {
+            if (!drawingTool) {
+                console.log('No drawing tool selected');
+                return;
+            }
+            console.log('Start drawing with tool:', drawingTool);
+            isDrawing = true;
+            const rect = drawingCanvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+
+            if (drawingTool === 'pen' || drawingTool === 'eraser') {
+                drawnPaths.push({
+                    type: drawingTool,
+                    points: [{ x: startX, y: startY }],
+                    color: document.getElementById('drawColor').value,
+                    size: parseInt(document.getElementById('drawSize').value)
+                });
+            }
+            e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!drawingTool || !e) return;
+
+            const rect = drawingCanvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+
+            // Silgi imlecini hareket ettir
+            const eraserCursor = document.getElementById('eraserCursor');
+            if (drawingTool === 'eraser' && eraserCursor) {
+                eraserCursor.style.left = currentX + 'px';
+                eraserCursor.style.top = currentY + 'px';
+            }
+
+            if (!isDrawing) return;
+
+            const color = document.getElementById('drawColor').value;
+            const size = parseInt(document.getElementById('drawSize').value);
+
+            redrawAllPaths();
+
+            drawingCtx.strokeStyle = color;
+            drawingCtx.lineWidth = size;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+
+            switch (drawingTool) {
+                case 'pen':
+                case 'eraser':
+                    const lastPath = drawnPaths[drawnPaths.length - 1];
+                    if (lastPath) lastPath.points.push({ x: currentX, y: currentY });
+                    break;
+                case 'line':
+                    drawingCtx.beginPath();
+                    drawingCtx.moveTo(startX, startY);
+                    drawingCtx.lineTo(currentX, currentY);
+                    drawingCtx.stroke();
+                    break;
+                case 'rect':
+                    drawingCtx.strokeRect(startX, startY, currentX - startX, currentY - startY);
+                    break;
+                case 'circle':
+                    const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
+                    drawingCtx.beginPath();
+                    drawingCtx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                    drawingCtx.stroke();
+                    break;
+            }
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (!drawingTool) return;
+
+            const rect = drawingCanvas.getBoundingClientRect();
+            const currentX = e ? (e.clientX - rect.left) : startX;
+            const currentY = e ? (e.clientY - rect.top) : startY;
+            const color = document.getElementById('drawColor').value;
+            const size = parseInt(document.getElementById('drawSize').value);
+
+            if (drawingTool === 'line') {
+                drawnPaths.push({ type: 'line', startX, startY, currentX, currentY, color, size });
+            } else if (drawingTool === 'rect') {
+                drawnPaths.push({ type: 'rect', x: startX, y: startY, width: currentX - startX, height: currentY - startY, color, size });
+            } else if (drawingTool === 'circle') {
+                drawnPaths.push({ type: 'circle', centerX: startX, centerY: startY, radius: Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2)), color, size });
+            }
+            redrawAllPaths();
+        }
+
+        function redrawAllPaths() {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawnPaths.forEach(path => {
+                drawingCtx.beginPath();
+
+                if (path.type === 'eraser') {
+                    drawingCtx.globalCompositeOperation = 'destination-out';
+                    drawingCtx.strokeStyle = 'rgba(0,0,0,1)';
+                    drawingCtx.lineWidth = path.size * 10; // Silgi kaleme göre 10 kat daha kalın
+                } else {
+                    drawingCtx.globalCompositeOperation = 'source-over';
+                    drawingCtx.strokeStyle = path.color;
+                    drawingCtx.lineWidth = path.size;
+                }
+                drawingCtx.lineCap = 'round';
+                drawingCtx.lineJoin = 'round';
+
+                if (path.type === 'pen' || path.type === 'eraser') {
+                    if (path.points && path.points.length > 0) {
+                        drawingCtx.moveTo(path.points[0].x, path.points[0].y);
+                        path.points.forEach(p => drawingCtx.lineTo(p.x, p.y));
+                        drawingCtx.stroke();
+                    }
+                } else if (path.type === 'line') {
+                    drawingCtx.moveTo(path.startX, path.startY);
+                    drawingCtx.lineTo(path.currentX, path.currentY);
+                    drawingCtx.stroke();
+                } else if (path.type === 'rect') {
+                    drawingCtx.strokeRect(path.x, path.y, path.width, path.height);
+                } else if (path.type === 'circle') {
+                    drawingCtx.arc(path.centerX, path.centerY, path.radius, 0, 2 * Math.PI);
+                    drawingCtx.stroke();
+                }
+            });
+
+            // Sıfırla
+            drawingCtx.globalCompositeOperation = 'source-over';
+        }
+
+        function clearDrawing() {
+            if (confirm('Tüm çizimleri silmek istediğinize emin misiniz?')) {
+                drawnPaths = [];
+                redrawAllPaths();
+            }
+        }
+
+        function updateSizeDisplay() {
+            const size = document.getElementById('drawSize').value;
+            document.getElementById('sizeDisplay').textContent = size;
+
+            // Silgi imlecini güncelle
+            const eraserCursor = document.getElementById('eraserCursor');
+            if (eraserCursor) {
+                const s = drawingTool === 'eraser' ? size * 10 : size;
+                eraserCursor.style.width = s + 'px';
+                eraserCursor.style.height = s + 'px';
+            }
+        }
+
+        function resizeCanvases() {
+            const container = document.querySelector('.grid-canvas');
+            if (!container) return;
+
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+
+            if (mapCanvas) {
+                mapCanvas.width = containerWidth;
+                mapCanvas.height = containerHeight;
+                drawGrid();
+            }
+
+            if (drawingCanvas) {
+                drawingCanvas.width = containerWidth;
+                drawingCanvas.height = containerHeight;
+                redrawAllPaths();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+
+    </script>
+
+</body>
+
+</html>
