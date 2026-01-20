@@ -559,151 +559,89 @@
             if (!saved) return;
 
             const updatedCharacters = JSON.parse(saved);
+            const container = document.getElementById('tokensContainer');
 
-            // Karakterlerin sayısı değişmişse (silme/ekleme) tüm UI'ı yeniden oluştur
-            if (updatedCharacters.length !== characters.length) {
-                console.log('Character count changed, rebuilding tokens...');
+            // 1. MEVCUT TOKENLARI HARİTALA (ID'ye göre)
+            const currentTokenMap = {};
+            document.querySelectorAll('.token').forEach(t => {
+                const id = t.dataset.id;
+                if (id) currentTokenMap[id] = t;
+            });
 
-                // Konumları kaydet
-                // Konumları kaydet (ID öncelikli, yoksa İsim)
-                const positions = {};
-                characters.forEach((char, idx) => {
-                    const tokens = document.querySelectorAll('.token');
-                    // tokens[idx] varsayımı riskli olabilir, dataset.index'e güvenelim
-                    const token = document.querySelector(`.token[data-index="${idx}"]`);
+            // 2. YENİ LİSTEYİ İŞLE
+            updatedCharacters.forEach((char, index) => {
+                let token = currentTokenMap[char.id];
 
-                    if (token) {
-                        const key = char.id || char.name; // ID varsa onu kullan, yoksa isim (eski)
-                        positions[key] = {
-                            x: parseInt(token.style.left),
-                            y: parseInt(token.style.top)
-                        };
-                    }
-                });
-
-                characters = updatedCharacters;
-                const container = document.getElementById('tokensContainer');
-                container.innerHTML = '';
-
-                // Token'ları yeniden oluştur
-                characters.forEach((char, index) => {
-                    const token = document.createElement('div');
+                // EĞER TOKEN YOKSA YENİ YARAT
+                if (!token) {
+                    token = document.createElement('div');
                     token.className = `token ${char.type}-token`;
-                    token.dataset.index = index;
+                    token.dataset.id = char.id; // ID based tracking
 
-                    // Önceki konumunu geri yükle
+                    // Konum belirle (varsa kayıtlıya, yoksa defaulta)
                     const tokenSize = char.type === 'boss' ? 100 : 70;
-                    const posKey = char.id || char.name;
-
-                    if (positions[posKey]) {
-                        token.style.left = positions[posKey].x + 'px';
-                        token.style.top = positions[posKey].y + 'px';
-                    } else if (positions[char.name] && !char.id) {
-                        // ID yoksa ve isimle eşleşme varsa (eski kayıtlar için fallback)
-                        token.style.left = positions[char.name].x + 'px';
-                        token.style.top = positions[char.name].y + 'px';
+                    if (tokenPositions[char.id]) { // ID ile ara
+                        token.style.left = tokenPositions[char.id].x + 'px';
+                        token.style.top = tokenPositions[char.id].y + 'px';
+                    } else if (tokenPositions[char.name]) { // İsimle ara (eski kayıtlar için fallback)
+                        token.style.left = tokenPositions[char.name].x + 'px';
+                        token.style.top = tokenPositions[char.name].y + 'px';
                     } else {
-                        // Yeni bir varlık veya klon, varsayılan konum (biraz kaydırarak)
-                        // Klonların üst üste binmemesi için hafif offset ekleyelim
-                        const offset = (index % 5) * 15;
-                        token.style.left = (50 + index * (tokenSize + 10) + offset) + 'px';
-                        token.style.top = (50 + offset) + 'px';
+                        // Yeni: Yan yana diz
+                        const offset = (index % 8) * (tokenSize + 10);
+                        const row = Math.floor(index / 8) * (tokenSize + 10);
+                        token.style.left = (50 + offset) + 'px';
+                        token.style.top = (50 + row) + 'px';
                     }
 
-                    let hpDisplay = '';
-                    const cType = (char.type || '').toString().toLowerCase().trim();
-
-                    // hpDisplay'i boş bırakıyoruz, isim artık altta olacak.
-
-
-                    const imgHtml = char.img ? `<img src="${char.img}" class="token-img">` : '';
-                    // Fotoğraf varsa token arkası rengini şeffaf yapabiliriz ama çerçeve kalmalı
-                    token.innerHTML = `${imgHtml}<div class="token-content">${hpDisplay}</div>`;
-
-                    // Tüm tipler için etiket oluştur
-                    const nameLabel = document.createElement('div');
-                    nameLabel.className = 'token-label';
-                    if (cType === 'player') {
-                        nameLabel.innerHTML = `<div style="font-weight: bold; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 3px; margin-bottom: 3px; font-size: 1.1em;">${char.name}</div><div style="color: #ff4d4d; font-size: 1.05em; font-weight: 900; text-shadow: 1px 1px 2px black;">❤️ ${char.hp}/${char.maxHp}</div>`;
-                    } else {
-                        // Mob ve Boss için sadece isim (şimdilik)
-                        nameLabel.innerHTML = `<div style="font-weight: bold; font-size: 1rem; color: ${cType === 'boss' ? '#ffd700' : 'white'}; text-shadow: 1px 1px 2px black;">${char.name}</div>`;
-                    }
-                    nameLabel.title = `${char.name} (${char.type.toUpperCase()})`;
-                    token.appendChild(nameLabel);
-
-                    token.title = `${char.name} (${char.type.toUpperCase()})`;
                     token.addEventListener('mousedown', startDrag);
                     token.addEventListener('click', selectToken);
                     container.appendChild(token);
-                });
-            } else {
-                // Sayı aynıysa sadece HP ve varlık bilgisini güncelle
-                updatedCharacters.forEach((newChar, index) => {
-                    if (characters[index]) {
-                        characters[index].hp = newChar.hp;
-                        characters[index].maxHp = newChar.maxHp;
-                        characters[index].img = newChar.img;
-                        // ID ve diğer statikler değişmez, gerekirse cậpncelle
-                        if (newChar.id) characters[index].id = newChar.id;
-                    }
-                });
+                }
 
-                // HTML'deki token'ları güncelle (HP vb)
-                document.querySelectorAll('.token').forEach((token, index) => {
-                    if (characters[index]) {
-                        const char = characters[index];
-                        const cType = (char.type || '').toString().toLowerCase().trim();
-                        console.log(`Rendering token: ${char.name}, Type: ${cType}, HasImg: ${!!char.img}`); // DEBUG
-                        let hpDisplay = '';
+                // 3. HER DURUMDA İÇERİĞİ GÜNCELLE
+                // Sınıfı güncelle (type değişmiş olabilir)
+                token.className = `token ${char.type}-token`;
+                // Indexi güncelle (tooltips veya debug için)
+                token.dataset.index = index;
 
-                        // Boss ve Mob için token içi metin (istenirse)
-                        // Boss ve Mob için token içi metin (istenirse) - İPTAL
-                        // hpDisplay boş kalacak
+                // İçerik HTML'ini oluştur
+                const cType = (char.type || '').toString().toLowerCase().trim();
+                const imgHtml = char.img ? `<img src="${char.img}" class="token-img">` : '';
 
+                let hpDisplay = '';
+                // Boss ise HP Gösterme (isteğe bağlı), Player ise özel gösterim
+                // Şu an sadece Player özel, diğerleri boş
 
-                        const innerDiv = token.querySelector('.token-content');
-                        if (innerDiv) {
-                            if (cType === 'player') {
-                                innerDiv.innerHTML = ''; // KESİN TEMİZLİK
-                            } else {
-                                innerDiv.innerHTML = hpDisplay;
-                            }
-                        }
+                let innerContent = `${imgHtml}<div class="token-content">${hpDisplay}</div>`;
+                token.innerHTML = innerContent;
 
-                        // Resim güncelleme (En üst katmana zorla)
-                        let imgTag = token.querySelector('.token-img');
-                        if (char.img) {
-                            if (!imgTag) {
-                                imgTag = document.createElement('img');
-                                imgTag.className = 'token-img';
-                                token.insertBefore(imgTag, token.firstChild);
-                            }
-                            imgTag.src = char.img;
-                        } else if (imgTag) {
-                            imgTag.remove();
-                        }
+                // Etiket (Label) Oluştur/Güncelle
+                let nameLabel = document.createElement('div');
+                nameLabel.className = 'token-label';
 
-                        // Etiket güncelleme (Oyuncu HP'si buraya)
-                        // Etiket güncelleme (Tüm tipler için)
-                        let nameLabel = token.querySelector('.token-label');
-                        if (!nameLabel) {
-                            nameLabel = document.createElement('div');
-                            nameLabel.className = 'token-label';
-                            token.appendChild(nameLabel);
-                        }
+                if (cType === 'player') {
+                    nameLabel.innerHTML = `<div style="font-weight: bold; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 3px; margin-bottom: 3px; font-size: 1.1em;">${char.name}</div><div style="color: #ff4d4d; font-size: 1.05em; font-weight: 900; text-shadow: 1px 1px 2px black;">❤️ ${char.hp}/${char.maxHp}</div>`;
+                } else {
+                    nameLabel.innerHTML = `<div style="font-weight: bold; font-size: 1rem; color: ${cType === 'boss' ? '#ffd700' : 'white'}; text-shadow: 1px 1px 2px black;">${char.name}</div>`;
+                }
 
-                        if (cType === 'player') {
-                            nameLabel.innerHTML = `<div style="font-weight: bold; border-bottom: 2px solid rgba(255,255,255,0.4); padding-bottom: 3px; margin-bottom: 3px; font-size: 1.1em;">${char.name}</div><div style="color: #ff4d4d; font-size: 1.05em; font-weight: 900; text-shadow: 1px 1px 2px black;">❤️ ${char.hp}/${char.maxHp}</div>`;
-                        } else {
-                            nameLabel.innerHTML = `<div style="font-weight: bold; font-size: 1rem; color: ${cType === 'boss' ? '#ffd700' : 'white'}; text-shadow: 1px 1px 2px black;">${char.name}</div>`;
-                        }
+                token.appendChild(nameLabel);
+                token.title = `${char.name} (${char.type.toUpperCase()})`;
 
-                        token.title = `${char.name} (${char.type.toUpperCase()})`;
-                    }
-                });
-            }
+                // İşlenen token'ı map'ten sil (geriye kalanlar silinecek)
+                if (currentTokenMap[char.id]) {
+                    delete currentTokenMap[char.id];
+                }
+            });
 
+            // 4. LİSTEDE OLMAYANLARI SİL
+            Object.values(currentTokenMap).forEach(token => {
+                token.remove();
+            });
+
+            // Global listeyi güncelle
+            characters = updatedCharacters;
             updateEntityList();
         }
 
@@ -788,7 +726,10 @@
                 const tokenSize = char.type === 'boss' ? 100 : 70;
 
                 // Önceki konumunu kullan, yoksa default
-                if (tokenPositions[char.name]) {
+                if (tokenPositions[char.id]) {
+                    token.style.left = tokenPositions[char.id].x + 'px';
+                    token.style.top = tokenPositions[char.id].y + 'px';
+                } else if (tokenPositions[char.name]) {
                     token.style.left = tokenPositions[char.name].x + 'px';
                     token.style.top = tokenPositions[char.name].y + 'px';
                 } else {
@@ -864,11 +805,14 @@
                 if (characters[index]) {
                     const x = parseInt(draggingToken.style.left);
                     const y = parseInt(draggingToken.style.top);
-                    tokenPositions[characters[index].name] = { x, y };
+
+                    // Use ID for saving position if available
+                    const key = characters[index].id || characters[index].name;
+                    tokenPositions[key] = { x, y };
 
                     // localStorage'a kaydet
                     localStorage.setItem('battleMapPositions', JSON.stringify(tokenPositions));
-                    console.log('Position saved for', characters[index].name, ':', { x, y });
+                    console.log('Position saved for', key, ':', { x, y });
                 }
             }
             draggingToken = null;

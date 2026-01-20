@@ -981,6 +981,113 @@
                 flex-direction: column;
             }
         }
+
+        /* DICE ROLLER REDESIGN STYLES */
+        .dice-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, opacity 0.2s;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .quick-btn:active {
+            transform: scale(0.98);
+        }
+
+        .quick-btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-d20 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-attack {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .dice-card {
+            background: rgba(128, 128, 128, 0.1);
+            border: 1px solid var(--divider-color);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dice-card label {
+            margin: 0;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: var(--header-color);
+        }
+
+        .dice-input-group {
+            display: flex;
+            width: 100%;
+            height: 35px;
+        }
+
+        .dice-input-group input {
+            width: 45px;
+            text-align: center;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid var(--divider-color);
+            border-right: none;
+            margin: 0;
+            padding: 5px;
+            font-weight: bold;
+        }
+
+        .dice-input-group button {
+            flex: 1;
+            border-radius: 0 4px 4px 0;
+            margin: 0;
+            background-color: var(--main-header-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .dice-input-group button:hover {
+            background-color: var(--main-menu-bg);
+        }
+
+        .dice-control {
+            display: none;
+        }
     </style>
 </head>
 
@@ -1062,7 +1169,8 @@
         </div>
 
         <div class="section-title">📊 İstatistikler</div>
-        <p style="margin-top: -10px; margin-bottom: 20px; font-style: italic;">Not: Irk bonusları otomatik *eklenmez*.
+        <p id="raceBonusWarning" style="margin-top: -10px; margin-bottom: 20px; font-style: italic;">Not: Irk bonusları
+            otomatik *eklenmez*.
             Lütfen istatistik değerlerine manuel ekleyiniz.</p>
 
         <div class="hp-armor-group stat-group">
@@ -1091,9 +1199,13 @@
                 <label>FİZİKSEL GÜÇ<span id="fiziksel_guc_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('fiziksel_guc')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="fiziksel_guc_val" name="fiziksel_guc_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('fiziksel_guc');" value="10"><label
-                            for="fiziksel_guc_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="fiziksel_guc_val" name="fiziksel_guc_val" class="stat-select"
+                            onchange="handleStatChange('fiziksel_guc')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="fiziksel_guc_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="fiziksel_guc_bonus"
                             name="fiziksel_guc_bonus" placeholder="+0" readonly class="calculated-bonus"><label
                             for="fiziksel_guc_bonus">Bonus</label></div>
@@ -1104,9 +1216,13 @@
                 <label>DAYANIKLILIK<span id="dayaniklilik_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('dayaniklilik')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="dayaniklilik_val" name="dayaniklilik_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('dayaniklilik'); updateCharacterSheet();"
-                            value="10"><label for="dayaniklilik_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="dayaniklilik_val" name="dayaniklilik_val" class="stat-select"
+                            onchange="handleStatChange('dayaniklilik')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="dayaniklilik_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="dayaniklilik_bonus"
                             name="dayaniklilik_bonus" placeholder="+0" readonly class="calculated-bonus"><label
                             for="dayaniklilik_bonus">Bonus</label></div>
@@ -1116,9 +1232,13 @@
                 <label>BİLGELİK<span id="bilgelik_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('bilgelik')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="bilgelik_val" name="bilgelik_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('bilgelik');" value="10"><label
-                            for="bilgelik_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="bilgelik_val" name="bilgelik_val" class="stat-select"
+                            onchange="handleStatChange('bilgelik')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="bilgelik_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="bilgelik_bonus" name="bilgelik_bonus"
                             placeholder="+0" readonly class="calculated-bonus"><label for="bilgelik_bonus">Bonus</label>
                     </div>
@@ -1129,9 +1249,13 @@
                 <label>ÇEVİKLİK<span id="ceviklik_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('ceviklik')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="ceviklik_val" name="ceviklik_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('ceviklik');" value="10"><label
-                            for="ceviklik_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="ceviklik_val" name="ceviklik_val" class="stat-select"
+                            onchange="handleStatChange('ceviklik')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="ceviklik_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="ceviklik_bonus" name="ceviklik_bonus"
                             placeholder="+0" readonly class="calculated-bonus"><label for="ceviklik_bonus">Bonus</label>
                     </div>
@@ -1142,9 +1266,12 @@
                 <label>ZEKA<span id="zeka_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('zeka')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="zeka_val" name="zeka_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('zeka');" value="10"><label
-                            for="zeka_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="zeka_val" name="zeka_val" class="stat-select" onchange="handleStatChange('zeka')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="zeka_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="zeka_bonus" name="zeka_bonus"
                             placeholder="+0" readonly class="calculated-bonus"><label for="zeka_bonus">Bonus</label>
                     </div>
@@ -1155,9 +1282,13 @@
                 <label>KARİZMA<span id="karizma_race_bonus" class="race-bonus-text"
                         onclick="applyRaceBonus('karizma')"></span></label>
                 <div class="value-bonus-group">
-                    <div class="value-input-container"><input type="text" id="karizma_val" name="karizma_val"
-                            placeholder="Temel Puan" oninput="calculateBonus('karizma');" value="10"><label
-                            for="karizma_val">Değer</label></div>
+                    <div class="value-input-container">
+                        <select id="karizma_val" name="karizma_val" class="stat-select"
+                            onchange="handleStatChange('karizma')">
+                            <option value="">Seç</option>
+                        </select>
+                        <label for="karizma_val">Değer</label>
+                    </div>
                     <div class="bonus-input-container"><input type="text" id="karizma_bonus" name="karizma_bonus"
                             placeholder="+0" readonly class="calculated-bonus"><label for="karizma_bonus">Bonus</label>
                     </div>
@@ -1166,43 +1297,68 @@
         </div>
 
         <div class="dice-roller">
-            <h3>Zar Atma Alanı (D20 + Çoklu Zar)</h3>
-            <p>Beceri testleri için 20 yüzlü zarı atın veya diğer zar kombinasyonlarını kullanın.</p>
-            <button id="rollButton">D20 ZAR AT</button>
-            <button id="baseAttackButton" style="background-color: #dc3545; color: white;">TEMEL SALDIRI</button>
-            <div class="multi-dice-panel">
-                <div class="dice-control">
-                    <label for="diceCount-4">D4</label>
-                    <input type="number" id="diceCount-4" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="4">D4</button>
+            <div class="dice-panel">
+                <!-- Row 1: Quick Actions -->
+                <div class="quick-actions">
+                    <button id="rollButton" class="quick-btn btn-d20">🎲 D20 ZAR AT</button>
+                    <button id="baseAttackButton" class="quick-btn btn-attack">⚔️ TEMEL SALDIRI</button>
                 </div>
-                <div class="dice-control">
-                    <label for="diceCount-6">D6</label>
-                    <input type="number" id="diceCount-6" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="6">D6</button>
+
+                <!-- Row 2: Multi Dice Grid -->
+                <div class="dice-grid">
+                    <!-- D4 -->
+                    <div class="dice-card">
+                        <label for="diceCount-4">D4</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-4" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="4">AT</button>
+                        </div>
+                    </div>
+                    <!-- D6 -->
+                    <div class="dice-card">
+                        <label for="diceCount-6">D6</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-6" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="6">AT</button>
+                        </div>
+                    </div>
+                    <!-- D8 -->
+                    <div class="dice-card">
+                        <label for="diceCount-8">D8</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-8" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="8">AT</button>
+                        </div>
+                    </div>
+                    <!-- D10 -->
+                    <div class="dice-card">
+                        <label for="diceCount-10">D10</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-10" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="10">AT</button>
+                        </div>
+                    </div>
+                    <!-- D12 -->
+                    <div class="dice-card">
+                        <label for="diceCount-12">D12</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-12" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="12">AT</button>
+                        </div>
+                    </div>
+                    <!-- D20 Multi -->
+                    <div class="dice-card">
+                        <label for="diceCount-20">D20 (Çoklu)</label>
+                        <div class="dice-input-group">
+                            <input type="number" id="diceCount-20" min="1" value="1">
+                            <button type="button" class="multi-dice-btn" data-dice="20">AT</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="dice-control">
-                    <label for="diceCount-8">D8</label>
-                    <input type="number" id="diceCount-8" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="8">D8</button>
-                </div>
-                <div class="dice-control">
-                    <label for="diceCount-10">D10</label>
-                    <input type="number" id="diceCount-10" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="10">D10</button>
-                </div>
-                <div class="dice-control">
-                    <label for="diceCount-12">D12</label>
-                    <input type="number" id="diceCount-12" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="12">D12</button>
-                </div>
-                <div class="dice-control">
-                    <label for="diceCount-20">D20</label>
-                    <input type="number" id="diceCount-20" min="1" value="1">
-                    <button type="button" class="multi-dice-btn" data-dice="20">D20</button>
-                </div>
+
+                <div id="diceResult"
+                    style="text-align: center; margin-top: 5px; font-weight: bold; color: var(--text-color);">---</div>
             </div>
-            <div id="diceResult">---</div>
         </div>
 
         <div class="section-title">⚔️ Yetenekler ve Eşyalar</div>
@@ -1583,11 +1739,21 @@
                 } else if (element.tagName === 'SELECT') {
                     element.selectedIndex = 0;
                 } else if (element.id.endsWith('_val')) {
-                    element.value = '10'; // Stat değerlerini varsayılan 10'a ayarla
+                    element.value = ''; // Reset standard array
                 } else {
                     element.value = '';
                 }
             });
+
+            // Reset Stats state
+            statsLocked = false;
+            enableStatDropdowns();
+            populateStatDropdowns();
+            statsLocked = false;
+            enableStatDropdowns();
+            populateStatDropdowns();
+            document.getElementById('raceBonusWarning').style.display = 'block';
+            document.getElementById('irk').disabled = false; // Re-enable race selection
 
             document.getElementById('can').value = '--- / ---';
             document.getElementById('diceResult').textContent = '---';
@@ -1609,6 +1775,99 @@
             placeholder.style.display = 'flex';
         }
 
+        // ISTATISTIK LOCK SYSTEM
+        let statsLocked = false;
+        const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+
+        function populateStatDropdowns() {
+            ALL_STATS_KEYS.forEach(key => {
+                const select = document.getElementById(key + '_val');
+                const currentValue = select.value;
+
+                // Save current selection to restore if possible, or keep empty
+                select.innerHTML = '<option value="">Seç</option>';
+
+                STANDARD_ARRAY.forEach(val => {
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = val;
+                    select.appendChild(option);
+                });
+
+                // Restore value if it exists in array (for loading data)
+                if (currentValue && STANDARD_ARRAY.includes(parseInt(currentValue))) {
+                    select.value = currentValue;
+                }
+            });
+            updateStatDropdowns();
+        }
+
+        function handleStatChange(changedKey) {
+            updateStatDropdowns();
+            calculateBonus(changedKey);
+
+            // Check if all stats are selected
+            const allSelected = ALL_STATS_KEYS.every(key => document.getElementById(key + '_val').value !== "");
+            if (allSelected) {
+                // User Requirement: Prompt to lock immediately after selection
+                if (confirm("Tüm istatistikleri belirlediniz. Bu dağılımı onaylayıp kilitlemek istiyor musunuz?\n\n(DİKKAT: Onayladıktan sonra istatistik puanlarını değiştiremezsiniz, ancak Irk Bonuslarını ekleyebilirsiniz.)")) {
+                    statsLocked = true;
+                    disableStatDropdowns();
+                    // Optionally save? Maybe not yet, just lock UI.
+                }
+            }
+        }
+
+        function updateStatDropdowns() {
+            // Get all currently selected "effective base values"
+            const usedBaseValues = {};
+            ALL_STATS_KEYS.forEach(key => {
+                const select = document.getElementById(key + '_val');
+                const val = select.value;
+                if (!val) return;
+
+                // Check if the selected option has a special base value
+                // (This happens when a race bonus modifies the value)
+                const selectedOption = select.options[select.selectedIndex];
+                const baseVal = selectedOption.getAttribute('data-base-value');
+
+                if (baseVal) {
+                    usedBaseValues[key] = parseInt(baseVal);
+                } else {
+                    usedBaseValues[key] = parseInt(val);
+                }
+            });
+
+            // Update each dropdown
+            ALL_STATS_KEYS.forEach(key => {
+                const select = document.getElementById(key + '_val');
+                // Don't mess with options if locked
+                if (statsLocked) return;
+
+                Array.from(select.options).forEach(option => {
+                    if (!option.value) return; // Skip default option
+
+                    // Logic: Is this option's value (or its base value) used by any *other* key?
+                    // Note: standard options don't have data-base-value, so we check checks against values directly for now.
+                    // But correctly we should check if THIS option's value (which is a standard array val) is in usedBaseValues
+
+                    const optVal = parseInt(option.value);
+
+                    // Does any other stat use this Standard Array value?
+                    const isUsed = Object.entries(usedBaseValues).some(([k, v]) => k !== key && v === optVal);
+
+                    if (isUsed) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // --- MEVCUT DİĞER FONKSİYONLAR ---
+        // (populateDropdowns call needs to be hooked up or called on load)
+
         // --- CRUD İŞLEMLERİ ---
 
         // Kaydetme fonksiyonu güncellendi (Artık menüye dönerken otomatik kaydediyor)
@@ -1619,6 +1878,24 @@
                     alert("Lütfen karakterinize bir isim verin.");
                 }
                 return;
+            }
+
+            // Lock stats on first save
+            if (!statsLocked && !isAutoSave) {
+                // Only lock if all stats are selected? Or just lock whatever is there?
+                // User requirement: "karakter bir kere kaydediltikten sonrada istatistikler değişilmeyecek"
+                // So we lock it.
+                if (confirm("Karakteri kaydettikten sonra istatistik puanları (Standard Array) değiştirilemez. Onaylıyor musunuz?")) {
+                    statsLocked = true;
+                    disableStatDropdowns();
+                } else {
+                    return; // Cancel save
+                }
+            } else if (!statsLocked && isAutoSave) {
+                // Auto-save shouldn't lock automatically, maybe? 
+                // But user said "once saved". Let's assume explicit save locks it.
+                // For auto-save (e.g. returning to menu), we usually don't prompt. 
+                // Let's NOT lock on auto-save to be safe, unless already locked.
             }
 
             const characterData = {};
@@ -1634,6 +1911,7 @@
                 }
             });
             characterData['raceBonusAppliedState'] = raceBonusAppliedState;
+            characterData['statsLocked'] = statsLocked; // Save lock state
 
             // Profil fotoğrafını kaydet
             const profilePic = document.getElementById('profilePicDisplay').src;
@@ -1679,11 +1957,33 @@
 
                 const characterData = JSON.parse(storedData);
 
+                if (characterData.statsLocked !== undefined) {
+                    statsLocked = characterData.statsLocked;
+                } else {
+                    statsLocked = false;
+                }
+
                 if (characterData.raceBonusAppliedState) {
                     raceBonusAppliedState = characterData.raceBonusAppliedState;
                 } else {
                     ALL_STATS_KEYS.forEach(key => raceBonusAppliedState[key] = false);
                 }
+
+                // Restore Race Bonus Warning Visibility & Lock Race Dropdown
+                const raceBonusWarning = document.getElementById('raceBonusWarning');
+                const hasBonuses = Object.values(raceBonusAppliedState).some(val => val === true);
+
+                if (hasBonuses) {
+                    raceBonusWarning.style.display = 'none';
+                    // Lock race selection if any bonus applied
+                    document.getElementById('irk').disabled = true;
+                } else {
+                    raceBonusWarning.style.display = 'block';
+                    document.getElementById('irk').disabled = false;
+                }
+
+                // Populate dropdowns properly
+                populateStatDropdowns();
 
                 const abilityPoolData = {};
                 for (const id in characterData) {
@@ -1717,14 +2017,82 @@
                     }
                 }
 
+                // Refresh dropdowns after value set
+                updateStatDropdowns();
+
+                // Apply Lock state
+                if (statsLocked) {
+                    disableStatDropdowns();
+                } else {
+                    enableStatDropdowns();
+                }
+
+                // FIX: Reconstruct custom options for Boosted Stats (Race Bonuses)
+                ALL_STATS_KEYS.forEach(key => {
+                    // Try to retrieve the value from data even if dropdown didn't accept it
+                    const savedVal = characterData[key + '_val']; // might be "15_race" or "15" or "8"
+                    const select = document.getElementById(key + '_val');
+
+                    if (!savedVal) return;
+
+                    // Logic to detect if it's a boosted value
+                    // 1. If it has "_race" suffix
+                    // 2. Or if select.value is empty (legacy handling for old saves?)
+
+                    const isRaceValue = typeof savedVal === 'string' && savedVal.endsWith('_race');
+
+                    if (isRaceValue || (select.value !== savedVal && !STANDARD_ARRAY.includes(parseInt(savedVal)))) {
+
+                        const selectedRace = document.getElementById('irk').value;
+                        const bonuses = RACE_STAT_BONUSES[selectedRace]?.stats || {};
+                        const bonus = bonuses[key] || 0;
+
+                        if (bonus !== 0) {
+                            const valInt = parseInt(savedVal);
+                            const inferredBase = valInt - bonus;
+
+                            if (STANDARD_ARRAY.includes(inferredBase)) {
+                                // Re-create the custom option
+                                // Use the exact saved value string if it ends with _race, otherwise convert to new format?
+                                // Let's stick to saved value to be safe.
+
+                                const newOption = document.createElement('option');
+                                newOption.value = savedVal; // e.g. "15_race"
+                                const sign = bonus >= 0 ? '+' : '';
+                                newOption.textContent = `${valInt} (${inferredBase} ${sign}${bonus} Irk)`;
+                                newOption.setAttribute('data-base-value', inferredBase);
+                                select.appendChild(newOption);
+                                select.value = savedVal;
+                            }
+                        }
+                    } else if (select.value !== savedVal) {
+                        // Standard values that failed to select? Rare fallback
+                        select.value = savedVal;
+                    }
+                });
+
+
                 currentCharacterName = name;
                 showCharacterSheet(false);
                 restoreAbilityPoolState(abilityPoolData);
+                updateCharacterSheet();
 
             } catch (e) {
                 console.error("Karakter verileri yüklenemedi:", e);
                 alert("Yükleme hatası: " + e.message + "\n(Kayıt dosyası bozuk olabilir veya veri yapısı uyumsuz.)");
             }
+        }
+
+        function disableStatDropdowns() {
+            ALL_STATS_KEYS.forEach(key => {
+                document.getElementById(key + '_val').disabled = true;
+            });
+        }
+
+        function enableStatDropdowns() {
+            ALL_STATS_KEYS.forEach(key => {
+                document.getElementById(key + '_val').disabled = false;
+            });
         }
 
         function restoreAbilityPoolState(savedSlots = {}) {
@@ -1846,6 +2214,57 @@
                     displaySpan.textContent = ` (${sign}${bonusAmount} Irk Bonusu)`;
                 }
             }
+        }
+
+        function applyRaceBonus(targetStat) {
+            if (statsLocked) {
+                alert("Karakter kaydedildiği için istatistikler kilitlenmiştir.");
+                return;
+            }
+
+            const selectedRace = document.getElementById('irk').value;
+            if (!selectedRace) {
+                alert("Lütfen önce bir ırk seçin.");
+                return;
+            }
+
+            const bonuses = RACE_STAT_BONUSES[selectedRace]?.stats || {};
+            const bonusAmount = bonuses[targetStat];
+
+            if (!bonusAmount) {
+                alert(`${selectedRace} ırkı ${targetStat.replace('_', ' ').toUpperCase()} için bir bonus sağlamıyor.`);
+                return;
+            }
+
+            if (raceBonusAppliedState[targetStat]) {
+                alert("Bu istatistik için ırk bonusu zaten eklendi!");
+                return;
+            }
+
+            // Apply bonus logic:
+            raceBonusAppliedState[targetStat] = true;
+            updateRaceBonusDisplay(selectedRace);
+            updateCharacterSheet(); // Recalculate everything
+
+            // Hide warning if ANY bonus is applied? Or all applicable?
+            // "bir kere ekledikten sonra" -> Muhtemelen en az bir tane eklenince.
+            document.getElementById('raceBonusWarning').style.display = 'none';
+        }
+
+        function calculateBonus(statKey) {
+            const valInput = document.getElementById(statKey + '_val');
+            let baseVal = parseInt(valInput.value) || 10;
+
+            // Add race bonus if applied
+            const selectedRace = document.getElementById('irk')?.value;
+            if (selectedRace && raceBonusAppliedState[statKey]) {
+                const bonuses = RACE_STAT_BONUSES[selectedRace]?.stats || {};
+                baseVal += (bonuses[statKey] || 0);
+            }
+
+            const bonus = Math.floor((baseVal - 10) / 2);
+            const sign = bonus >= 0 ? '+' : '';
+            document.getElementById(statKey + '_bonus').value = sign + bonus;
         }
 
         function clearPriorityStars() {
@@ -1983,30 +2402,83 @@
         }
 
         function applyRaceBonus(statKey) {
-            const bonusSpan = document.getElementById(statKey + '_race_bonus');
-            const valueInput = document.getElementById(statKey + '_val');
-
-            const bonusText = bonusSpan.textContent;
-            if (!bonusText || bonusText.trim() === "") {
-                alert("Bu istatistik için uygulanacak bir ırk bonusu bulunmuyor veya zaten uygulanmış.");
+            // FIX: User requested Race Bonuses ONLY be allowed when stats are locked.
+            if (!statsLocked) {
+                alert("Irk bonusu ekleyebilmek için önce tüm İstatistik Puanlarını (Standard Array) belirleyip kilitlemeniz gerekmektedir.");
                 return;
             }
 
-            const match = bonusText.match(/([+\-]?\d+)/);
-            if (!match) return;
+            const valueInput = document.getElementById(statKey + '_val');
+            // FIX: Check if a value is selected first
+            if (!valueInput.value) {
+                alert("Lütfen önce bu istatistik için bir değer (Standard Array) seçin.");
+                return;
+            }
 
-            const bonusAmount = parseInt(match[1]);
-            let currentValue = parseInt(valueInput.value) || 0;
+            const bonusSpan = document.getElementById(statKey + '_race_bonus');
+            const bonusText = bonusSpan.textContent;
 
-            currentValue += bonusAmount;
-            valueInput.value = currentValue;
+            // Logic to find bonus amount from Span OR from Config directly
+            let bonusAmount = 0;
+
+            // It's safer to get from config again to be sure
+            const selectedRace = document.getElementById('irk').value;
+            const bonuses = RACE_STAT_BONUSES[selectedRace]?.stats || {};
+            bonusAmount = bonuses[statKey];
+
+            if (!bonusAmount) {
+                alert("Bu istatistik için uygulanacak bir ırk bonusu bulunamadı.");
+                return;
+            }
+
+            if (raceBonusAppliedState[statKey]) {
+                alert("Bu istatistik için ırk bonusu zaten eklendi!");
+                return;
+            }
+
+            const originalValue = parseInt(valueInput.value);
+            const newValue = originalValue + bonusAmount;
+
+            // Strategy: Always create a custom option with a unique value suffix to avoid selecting the standard option.
+            const uniqueValue = `${newValue}_race`;
+
+            // Check if THIS specific custom option exists (idempotency)
+            let optionExists = false;
+            for (let i = 0; i < valueInput.options.length; i++) {
+                if (valueInput.options[i].value === uniqueValue) {
+                    optionExists = true;
+                    break;
+                }
+            }
+
+            if (!optionExists) {
+                // Create new option
+                const newOption = document.createElement('option');
+                newOption.value = uniqueValue; // "15_race"
+                const sign = bonusAmount >= 0 ? '+' : '';
+                newOption.textContent = `${newValue} (${originalValue} ${sign}${bonusAmount} Irk)`;
+                newOption.setAttribute('data-base-value', originalValue); // Tag with base value for mutual exclusion
+                valueInput.appendChild(newOption);
+            }
+
+            valueInput.value = uniqueValue;
 
             calculateBonus(statKey);
 
-            bonusSpan.textContent = '';
+            bonusSpan.textContent = ''; // Hide the +2 text since it's now applied
             raceBonusAppliedState[statKey] = true;
 
-            alert(`${statKey.toUpperCase()} istatistiğine ${bonusAmount > 0 ? '+' : ''}${bonusAmount} ırk bonusu başarıyla eklendi!`);
+            // Force update to refresh disabled states
+            updateStatDropdowns();
+            updateCharacterSheet();
+
+            alert(`${statKey.replace('_', ' ').toUpperCase()} istatistiğine ${bonusAmount > 0 ? '+' : ''}${bonusAmount} ırk bonusu başarıyla eklendi!`);
+
+            // Hide global warning if needed
+            document.getElementById('raceBonusWarning').style.display = 'none';
+
+            // FIX: Lock the Race Dropdown to prevent inconsistent state
+            document.getElementById('irk').disabled = true;
         }
 
         function updateCharacterSheet() {
@@ -2325,18 +2797,22 @@
 
         // --- BAŞLANGIÇ YÜKLEME VE EVENT LISTENER'LAR ---
 
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onload = function () {
+            populateDropdowns();
+            populateStatDropdowns(); // Initialize stat dropdowns
+            renderCharacterList();
+
+            // Check for saved dark mode preference
             if (localStorage.getItem('darkMode') === 'enabled') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('darkModeToggle').textContent = '☀️ Gündüz Modu Aç';
             }
 
-            populateDropdowns();
             updateRankDependentFields();
 
             // Uygulama her zaman Ana Menü ile başlar
             showMainMenu();
-        });
+        };
 
         document.getElementById('damageButton').addEventListener('click', () => updateHP(0, 'damage'));
         document.getElementById('healButton').addEventListener('click', () => updateHP(0, 'heal'));

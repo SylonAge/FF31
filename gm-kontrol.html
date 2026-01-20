@@ -400,7 +400,7 @@
     </style>
 </head>
 
-<body onload="loadData()">
+<body onload="loadDataFromStorage()">
 
     <div class="gm-dashboard">
         <!-- Üst Panel -->
@@ -467,8 +467,8 @@
                 <div class="input-group">
                     <label>Kayıt</label>
                     <div style="display: flex; gap: 5px;">
-                        <button class="btn-primary btn-icon" onclick="saveData()" title="Kaydet">💾</button>
-                        <button class="btn-secondary btn-icon" onclick="loadData()" title="Yükle">📂</button>
+                        <button class="btn-primary btn-icon" onclick="exportData()" title="Yedek İndir">💾</button>
+                        <button class="btn-secondary btn-icon" onclick="importData()" title="Yedek Yükle">📂</button>
                         <button class="btn-danger btn-icon" onclick="clearData()" title="Temizle">🗑️</button>
 
                     </div>
@@ -479,6 +479,7 @@
         <button class="btn-warning btn-sort-main" onclick="sortInitiative()">⚡ Savaş Sırası ⚡</button>
 
         <input type="file" id="updateImgInput" accept="image/*" style="display: none;" onchange="handleUpdateImg(this)">
+        <input type="file" id="importInput" accept=".json" style="display: none;" onchange="handleImportFile(this)">
     </div>
 
     <!-- TEK BÖLMELİ GRID YAPISI -->
@@ -503,19 +504,52 @@
             return 'ent_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        function handleImgUpload(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById('imgData').value = e.target.result;
-                    document.getElementById('imgStatus').innerText = "OK";
-                };
-                reader.readAsDataURL(file);
+        // --- Image Compression ---
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function (e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function () {
+                    const elem = document.createElement('canvas');
+                    const MAX_WIDTH = 300; // Increased quality
+                    const MAX_HEIGHT = 300;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    elem.width = width;
+                    elem.height = height;
+                    const ctx = elem.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const data = elem.toDataURL('image/jpeg', 0.9); // Better quality
+                    callback(data);
+                }
             }
         }
 
-        function _createEntityInternal(name, hp, ac, init, type, notes, img, id = null) {
+        function handleImgUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                compressImage(file, (data) => {
+                    document.getElementById('imgData').value = data;
+                    document.getElementById('imgStatus').innerText = "OK";
+                });
+            }
+        }
+
+        function _createEntityInternal(name, hp, ac, init, type, notes, img, id = null, skipSave = false) {
             if (!name || !hp) return;
 
             const finalId = id || generateUniqueId();
@@ -581,7 +615,7 @@
             document.getElementById('imgStatus').innerText = "📷";
 
             // Otomatik kaydet
-            saveData();
+            if (!skipSave) saveData();
         }
 
         function cloneEntity(btn, type) {
@@ -630,6 +664,7 @@
             });
             container.innerHTML = '';
             cards.forEach(card => container.appendChild(card));
+            saveData(); // Save new order
         }
 
         function saveData() {
@@ -660,7 +695,12 @@
                 };
             });
 
-            localStorage.setItem('battlefieldData', JSON.stringify(entities));
+            try {
+                localStorage.setItem('battlefieldData', JSON.stringify(entities));
+            } catch (e) {
+                console.error("Storage Limit Exceeded or Error", e);
+                alert("⚠️ VERİ KAYDEDİLEMEDİ! Muhtemelen resimler çok fazla yer kaplıyor. Lütfen bazı karakterleri silin veya resimsiz yükleyin.");
+            }
         }
 
         // HP listener
@@ -670,15 +710,70 @@
             }
         }, true);
 
-        function loadData() {
+        // --- VERİ YÖNETİMİ (DOSYA & STORAGE) ---
+        function exportData() {
+            const saved = localStorage.getItem('battlefieldData');
+            if (!saved || saved === '[]') {
+                alert('⚠️ İndirilecek veri yok!');
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(saved);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "battle_backup_" + new Date().toISOString().slice(0, 10) + ".json");
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importData() {
+            document.getElementById('importInput').click();
+        }
+
+        function handleImportFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const entities = JSON.parse(e.target.result);
+                    if (!Array.isArray(entities)) throw new Error("Geçersiz JSON formatı");
+
+                    if (confirm('Mevcut liste silinip dosyadan yüklensin mi?')) {
+                        processLoadedEntities(entities);
+                        alert('✅ Veriler başarıyla yüklendi!');
+                    }
+                } catch (err) {
+                    alert('❌ Dosya okuma hatası: ' + err.message);
+                }
+                input.value = ''; // Reset input
+            };
+            reader.readAsText(file);
+        }
+
+        function processLoadedEntities(entities) {
+            document.getElementById('mainList').innerHTML = ''; // Clear main list
+            entities.forEach(ent => {
+                _createEntityInternal(ent.name, ent.hp || ent.maxHp, ent.ac || 10, ent.init, ent.type, ent.notes, ent.img || '', ent.id, true); // true = skipSave
+            });
+            saveData(); // Save once at the end
+        }
+
+        function loadDataFromStorage() {
             const saved = localStorage.getItem('battlefieldData');
             if (!saved) return;
-
             const entities = JSON.parse(saved);
-            document.getElementById('mainList').innerHTML = ''; // Clear main list
 
+            // Storage'dan yüklerken sessizce yükle (skipSave=true) -> Ama loadDataFromStorage başlangıçta çağrılıyor, 
+            // tek tek eklemek yerine toplu ekleyip son bir save atmak daha güvenli olabilir veya hiç save atmamak (zaten storage'da var).
+            // Ancak _createEntityInternal eski kodda her seferinde save atıyordu. 
+            // skipSave=true yapıp, sonunda bir şey yapmaya gerek yok çünkü zaten loaded data storage ile aynı.
+
+            document.getElementById('mainList').innerHTML = '';
             entities.forEach(ent => {
-                _createEntityInternal(ent.name, ent.hp || ent.maxHp, ent.ac || 10, ent.init, ent.type, ent.notes, ent.img || '', ent.id);
+                _createEntityInternal(ent.name, ent.hp || ent.maxHp, ent.ac || 10, ent.init, ent.type, ent.notes, ent.img || '', ent.id, true);
             });
             loadPrefabList();
         }
@@ -758,17 +853,14 @@
         function handleUpdateImg(input) {
             const file = input.files[0];
             if (file && currentImgContainer) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const imgData = e.target.result;
+                compressImage(file, (imgData) => {
                     currentImgContainer.style.backgroundImage = `url('${imgData}')`;
                     currentImgContainer.dataset.img = imgData;
                     currentImgContainer.innerHTML = '';
                     input.value = '';
                     currentImgContainer = null;
                     saveData();
-                };
-                reader.readAsDataURL(file);
+                });
             }
         }
 
