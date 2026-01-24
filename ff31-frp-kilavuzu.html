@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF31 FRP Kılavuzu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #f1c40f;
+            text-align: center;
+            border-bottom: 3px solid #f1c40f;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #f1c40f;
+            border-bottom: 2px solid #444;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: #5dade2;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            font-size: 1.1em;
+        }
+
+        p,
+        li {
+            line-height: 1.6;
+        }
+
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #1e1e1e;
+        }
+
+        th,
+        td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #252525;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .primary {
+            background-color: #1a3a4a;
+            font-weight: bold;
+            color: #5dade2;
+        }
+
+        .secondary {
+            background-color: #3d2817;
+            color: #d4a574;
+        }
+
+        .hp-table td:nth-child(3) {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        /* Irk ve Yetenek Tablosu Stili */
+        .race-bonus-table th,
+        .race-bonus-table td {
+            text-align: left;
+        }
+
+        .race-bonus-table th:nth-child(3),
+        .race-bonus-table td:nth-child(3) {
+            text-align: center;
+        }
+
+        .stat-mod {
+            background-color: #2a2a1a;
+        }
+
+        .note {
+            margin-top: 30px;
+            font-style: italic;
+            font-size: 0.9em;
+            color: #aaa;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+
+        .currency-box {
+            background-color: #252525;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📖 Final Fantasy 31 Oyuncu Kılavuzu</h1>
+
+    <h2>Gaia’nın (Dünyamız) Yaratılışı ve Geçmişi</h2>
+    <p>Gaia, Tanrı <strong>Dogness</strong>'ın yarattığı ancak <strong>Diablo</strong>'nun işgaliyle harap olmuş bir
+        dünyada geçen, hayatta kalma ve macera hikayesidir. Sizler, sıradan işler peşinde koşan Bronz Rütbe
+        maceracılarsınız. Dünyanın en büyük sırları şimdilik size kapalıdır.</p>
+
+    <h2>KARAKTER YARATIMI VE İLERLEME</h2>
+
+    <h3>1. Rütbe Sistemi ve Güçlenme</h3>
+    <p>Rütbeler, karakterin prestijini ve gücünü gösterir. Oyuncular <strong>Bronz Rütbe</strong> ile başlar. Rütbeniz,
+        size <strong>Rütbe Bonusu (RB)</strong> ve daha fazla Büyü/Yetenek Slotu sağlar.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Rütbe</th>
+                <th>Rütbe Bonusu (RB)</th>
+                <th>Maksimum Slot Havuzu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Bronz</strong></td>
+                <td><strong>+0</strong></td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td><strong>Gümüş</strong></td>
+                <td><strong>+1</strong></td>
+                <td>3</td>
+            </tr>
+            <tr>
+                <td><strong>Altın</strong></td>
+                <td><strong>+2</strong></td>
+                <td>4</td>
+            </tr>
+            <tr>
+                <td><strong>Elmas</strong></td>
+                <td><strong>+3</strong></td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>Platin</td>
+                <td>+4</td>
+                <td>6</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2. Temel Statikler ve Savunma</h3>
+    <ul>
+        <li><strong>6 İstatistik:</strong> Fiziksel-Güç (STR), Dayanıklılık (CON), Çeviklik (DEX), Zeka (INT), Bilgelik
+            (WIS), Karizma (CHA).</li>
+        <li><strong>Can Puanı (HP):</strong> Min 100 - Max 130 + Dayanıklılık Modu.</li>
+        <li><strong>Zırh Sınıfı (AC):</strong> Sınıfa bağlıdır.</li>
+    </ul>
+
+    <h2>SAVAŞ MEKANİKLERİ</h2>
+
+    <h3>1. Saldırı ve Hasar Hesaplaması</h3>
+    <p>Bu sistemde hasar çıktısı yüksektir. RB, hem isabetinize hem de hasarınıza eklenir.</p>
+    <ul>
+        <li><strong>Saldırı Zarı (İsabet):</strong> d20 + <strong>Rütbe Bonusu (RB)</strong></li>
+        <li><strong>Temel Saldırı:</strong> <strong>3d6</strong> + Sınıfın Birincil İstatistik Modu</li>
+        <li><strong>Özel Yetenek / Büyü:</strong> GM ve oyuncular ile beraber belirlenir. Büyü slotu ile kullanılır. Her
+            Rütbede 1 Özel yetenek oluşturursunuz.</li>
+    </ul>
+
+    <h3>2. Kritikler ve Aksilikler</h3>
+    <ul>
+        <li><strong>Kritik Vuruş (Nat 20):</strong> Hasar için kullanılan <strong>tüm zarlar iki katı</strong> atılır.
+        </li>
+        <li><strong>Kritik Başarısızlık (Nat 1):</strong> Otomatik ıskalama ve Oyun Yöneticisi (GM) tarafından
+            belirlenen bir aksilik yaşanır.</li>
+    </ul>
+
+    <h3>3. Büyü/Yetenek Slotları Sistemi</h3>
+    <ul>
+        <li><strong>Kullanım:</strong> Slotlar, karakterinizin <strong>özel yeteneklerini</strong> (yüksek hasar, alan
+            etkileri vb.) kullanmak için harcanan enerjidir.</li>
+        <li><strong>Havuz:</strong> Maksimum havuz Rütbenizle birlikte artar (Bronz = 2, Gümüş = 3).</li>
+        <li><strong>Hasar Örneği:</strong> 1 slot harcayarak 8d6 + {Birincil İstatitik Mod} + {RB} gibi yıkıcı hasarlar
+            verebilirsiniz.</li>
+        <li><strong>Slot Yenilenmesi:</strong> Kısa dinlenmede 1, Uzun Dinlenmede tamamını yeniler.</li>
+    </ul>
+
+    <h2>Para Sistemi</h2>
+    <div class="currency-box">
+        <p><strong>100 Bronz</strong> = 1 Gümüş</p>
+        <p><strong>1000 Gümüş</strong> = 1 Altın</p>
+        <p><strong>100 Altın</strong> = 1 Elmas</p>
+        <p style="margin-top:10px;">Oyuncular başlangıçta <strong>100 Gümüş</strong> ile başlar.</p>
+    </div>
+
+    <!-- Original Content Below -->
+    <hr style="border: 0; border-top: 1px solid #444; margin: 40px 0;">
+
+    <h2>Sınıf Öncelik Kılavuzu (FF31 Odaklı İstatistikler)</h2>
+    <p>Bu tablo, FF31'deki rolüne göre her sınıf için Birincil ve İkincil İstatistik önceliklerini gösterir.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sınıf</th>
+                <th>Birincil İstatistik (En Önemli)</th>
+                <th>İkincil İstatistik (Gerekli)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Barbarian (Barbar)</td>
+                <td class="primary">GÜÇ (STR)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Bard (Ozan)</td>
+                <td class="primary">KARİZMA (CHA)</td>
+                <td class="secondary">ÇEVİKLİK (DEX)</td>
+            </tr>
+            <tr>
+                <td>Cleric (Ruhban)</td>
+                <td class="primary">BİLGELİK (WIS)</td>
+                <td class="secondary">GÜÇ (STR) veya DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Druid (Druid)</td>
+                <td class="primary">BİLGELİK (WIS)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Fighter (Savaşçı)</td>
+                <td class="primary">GÜÇ (STR)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Monk (Keşiş)</td>
+                <td class="primary">ÇEVİKLİK (DEX)</td>
+                <td class="secondary">BİLGELİK (WIS) veya DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Paladin (Paladin)</td>
+                <td class="primary">KARİZMA (CHA)</td>
+                <td class="secondary">GÜÇ (STR) veya DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Ranger (Bekçi)</td>
+                <td class="primary">ÇEVİKLİK (DEX)</td>
+                <td class="secondary">BİLGELİK (WIS)</td>
+            </tr>
+            <tr>
+                <td>Rogue (Hırsız)</td>
+                <td class="primary">ÇEVİKLİK (DEX)</td>
+                <td class="secondary">ZEKA (INT) (Yetenekler)</td>
+            </tr>
+            <tr>
+                <td>Sorcerer (Büyücü)</td>
+                <td class="primary">KARİZMA (CHA)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Warlock (Büyücü)</td>
+                <td class="primary">KARİZMA (CHA)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+            <tr>
+                <td>Wizard (Büyücü)</td>
+                <td class="primary">ZEKA (INT)</td>
+                <td class="secondary">DAYANIKLILIK (CON)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Can (HP) Artış Kuralları</h2>
+    <p>Tüm sınıflar her rütbede sabit +10 HP kazanır.</p>
+
+    <table class="hp-table">
+        <thead>
+            <tr>
+                <th>Sınıf (EN/TR)</th>
+                <th>Rol Tanımı</th>
+                <th>Bronz Rütbe Başlangıç Canı</th>
+                <th>Rütbe Başına Can Artışı</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Barbarian (Barbar)</td>
+                <td>Öfkeli savaşçı,saf güç</td>
+                <td>130 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Fighter (Savaşçı)</td>
+                <td>Silah ustası,dayanıklı dövüşçü</td>
+                <td>125 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Paladin (Paladin)</td>
+                <td>Kutsal şövalye,yeminli koruyucu</td>
+                <td>120 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Cleric (Ruhban)</td>
+                <td>İyileştirici rahip,kutsal koruma</td>
+                <td>115 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Ranger (Bekçi)</td>
+                <td>İz sürücü avcı</td>
+                <td>115 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Monk (Keşiş)</td>
+                <td>Hızlı vuruşlar,ruhsal disiplin</td>
+                <td>110 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Rogue (Hırsız)</td>
+                <td>Hafif Çevik</td>
+                <td>110 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Bard (Ozan)</td>
+                <td>Müzikle büyü,yetenekli sosyal</td>
+                <td>105 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Druid (Druid)</td>
+                <td>Doğa bekçisi, şekil değiştiren</td>
+                <td>105 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Warlock (Büyücü)</td>
+                <td>Sözleşmeli güç,karanlık anlaşma</td>
+                <td>105 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Sorcerer (Büyücü)</td>
+                <td>Doğuştan büyü,saf potansiyel</td>
+                <td>100 HP</td>
+                <td>+20 HP</td>
+            </tr>
+            <tr>
+                <td>Wizard (Büyücü)</td>
+                <td>Kitaptan büyü,akademik ustalık</td>
+                <td>100 HP</td>
+                <td>+20 HP</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Irk Bonusları ve İstatistik Değişiklikleri</h2>
+    <p>Aşağıdaki tablo, karakterinizi oluştururken seçtiğiniz ırkın hangi istatistiklere ve cana bonus sağladığını
+        gösterir.</p>
+
+    <table class="race-bonus-table">
+        <thead>
+            <tr>
+                <th>Irk</th>
+                <th>İstatistik Bonusları</th>
+                <th class="stat-mod">Can (HP) Bonusu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>İnsan</td>
+                <td>Tüm İstatistikler +1 (GÜÇ, ÇEVİKLİK, DAYANIKLILIK, ZEKA, BİLGELİK, KARİZMA)</td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+            <tr>
+                <td>Elf</td>
+                <td>ÇEVİKLİK (DEX) +2, ZEKA (INT) +1</td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+            <tr>
+                <td>Cüce</td>
+                <td>GÜÇ (STR) +2, DAYANIKLILIK (CON) +1</td>
+                <td class="stat-mod">+5 HP</td>
+            </tr>
+            <tr>
+                <td>Yarı-Elf</td>
+                <td>KARİZMA (CHA) +2,BİLGELİK (WIS) +1 </td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+            <tr>
+                <td>Ejderha Soyu</td>
+                <td>GÜÇ (STR) +2, KARİZMA (CHA) +1</td>
+                <td class="stat-mod">+5 HP</td>
+            </tr>
+            <tr>
+                <td>Yarı-Ork</td>
+                <td>GÜÇ (STR) +1, DAYANIKLILIK (CON) +2</td>
+                <td class="stat-mod">+10 HP</td>
+            </tr>
+            <tr>
+                <td>Gnome</td>
+                <td>ZEKA (INT) +2, ÇEVİKLİK (DEX) +1</td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+            <tr>
+                <td>Buçukluk</td>
+                <td>ÇEVİKLİK (DEX) +2, KARİZMA (CHA) +1</td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+            <tr>
+                <td>Tiefling</td>
+                <td>ZEKA (INT) +1, KARİZMA (CHA) +2</td>
+                <td class="stat-mod">+0 HP</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Yetenek ve Zar Atma Kılavuzu (FF31 Standart Eşleştirmeler)</h2>
+    <p>Bu kılavuz, karakter kağıdınızdaki yetenek ve kurtulma zarlarını atarken kullanmanız gereken ana istatistik
+        bonusunu gösterir. (Eşleştirme: GÜÇ=STR, ÇEVİKLİK=DEX, DAYANIKLILIK=CON, ZEKA=INT, BİLGELİK=WIS, KARİZMA=CHA)
+    </p>
+
+    <table class="race-bonus-table">
+        <thead>
+            <tr>
+                <th>Yetenek (Skill)</th>
+                <th>Kullanılacak İstatistik</th>
+                <th>Açıklama</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="3">YETENEK KONTROLLERİ</td>
+            </tr>
+            <tr>
+                <td>Acrobatics (Akrobasi)</td>
+                <td>ÇEVİKLİK (DEX) Bonusu</td>
+                <td>Denge, takla ve çevik hareket gerektiren durumlar.</td>
+            </tr>
+            <tr>
+                <td>Animal Handling (Hayvan İdaresi)</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>Hayvanların niyetlerini anlama veya onları eğitme.</td>
+            </tr>
+            <tr>
+                <td>Arcana (Gizem)</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Büyü türleri, semboller ve büyülü objeler hakkında bilgi.</td>
+            </tr>
+            <tr>
+                <td>Athletics (Atletizm)</td>
+                <td>GÜÇ (STR) Bonusu</td>
+                <td>Koşma, tırmanma, yüzme veya bir şeyi zorla itme.</td>
+            </tr>
+            <tr>
+                <td>Deception (Kandırma)</td>
+                <td>KARİZMA (CHA) Bonusu</td>
+                <td>Yalan söyleyerek veya aldatarak birini yanlış yönlendirme.</td>
+            </tr>
+            <tr>
+                <td>History (Tarih)</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Geçmiş olaylar, savaşlar ve krallıklar hakkında bilgi.</td>
+            </tr>
+            <tr>
+                <td>Insight (Sezgi)</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>Birinin niyetini veya duygusal durumunu anlama.</td>
+            </tr>
+            <tr>
+                <td>Intimidation (Korkutma)</td>
+                <td>KARİZMA (CHA) Bonusu</td>
+                <td>Tehdit veya fiziksel şiddet gösterisiyle birini zorlama.</td>
+            </tr>
+            <tr>
+                <td>Investigation (Araştırma)</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Gizli ipuçları, şifreler veya bir mekanı detaylıca inceleme.</td>
+            </tr>
+            <tr>
+                <td>Medicine (Tıp)</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>Bir yaralıyı tedavi etme veya hastalık teşhisi.</td>
+            </tr>
+            <tr>
+                <td>Nature (Doğa)</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Hayvanlar, bitkiler, coğrafya veya hava durumu hakkında bilgi.</td>
+            </tr>
+            <tr>
+                <td>Perception (Algı)</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>Gizlenmiş nesneleri fark etme veya çevredeki tehlikeleri sezme.</td>
+            </tr>
+            <tr>
+                <td>Performance (Gösteri)</td>
+                <td>KARİZMA (CHA) Bonusu</td>
+                <td>Müzik, dans veya tiyatro ile bir kitleyi eğlendirme.</td>
+            </tr>
+            <tr>
+                <td>Persuasion (İkna)</td>
+                <td>KARİZMA (CHA) Bonusu</td>
+                <td>Mantık veya itibar kullanarak birini rızasıyla ikna etme.</td>
+            </tr>
+            <tr>
+                <td>Religion (Din)</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Tanrılar, dini pratikler ve kültler hakkında bilgi.</td>
+            </tr>
+            <tr>
+                <td>Sleight of Hand (El Çabukluğu)</td>
+                <td>ÇEVİKLİK (DEX) Bonusu</td>
+                <td>Cepteki eşyayı çalma, kilit açma veya küçük nesneleri gizleme.</td>
+            </tr>
+            <tr>
+                <td>Stealth (Gizlenme)</td>
+                <td>ÇEVİKLİK (DEX) Bonusu</td>
+                <td>Görünmeden ilerleme, sessiz kalma veya birini takip etme.</td>
+            </tr>
+            <tr>
+                <td>Survival (Hayatta Kalma)</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>İz sürme, yön bulma ve vahşi doğada yiyecek bulma.</td>
+            </tr>
+            <tr>
+                <td colspan="3">KURTULMA ZARLARI (SAVING THROWS)</td>
+            </tr>
+            <tr>
+                <td>GÜÇ Kurtulma Zarı</td>
+                <td>GÜÇ (STR) Bonusu</td>
+                <td>Büyük bir darbeyi engelleme, zehirli bir maddeyi dışarı atma (itme, çekme, kırma).</td>
+            </tr>
+            <tr>
+                <td>ÇEVİKLİK Kurtulma Zarı</td>
+                <td>ÇEVİKLİK (DEX) Bonusu</td>
+                <td>Büyülü bir ateş topundan veya tuzaktan kaçınma (hız, tepki).</td>
+            </tr>
+            <tr>
+                <td>DAYANIKLILIK Kurtulma Zarı</td>
+                <td>DAYANIKLILIK (CON) Bonusu</td>
+                <td>Zehirli bir maddeye karşı direnme, hastalık veya ağır yorgunluğa dayanma.</td>
+            </tr>
+            <tr>
+                <td>ZEKA Kurtulma Zarı</td>
+                <td>ZEKA (INT) Bonusu</td>
+                <td>Bilinçli bir zihinsel etkiye karşı direnme (gerçekliği sorgulama, zihinsel ataklar).</td>
+            </tr>
+            <tr>
+                <td>BİLGELİK Kurtulma Zarı</td>
+                <td>BİLGELİK (WIS) Bonusu</td>
+                <td>Zihni kontrol eden büyülere veya aldatmacalara karşı direnme (irade gücü, sezgi).</td>
+            </tr>
+            <tr>
+                <td>KARİZMA Kurtulma Zarı</td>
+                <td>KARİZMA (CHA) Bonusu</td>
+                <td>Bir varlığın veya büyünün ruhunuzu ele geçirmesine direnme (benlik bilinci, ruh bütünlüğü).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="note">
+        <p>İstatistiklerinizin Amacı: Birincil İstatistik, sınıf yeteneklerinizin ve saldırılarınızın başarısını
+            belirler. İkincil İstatistik, karakterinizin hayatta kalma yeteneğini veya ek yeteneklerini destekler.
+            @SylonAge</p>
+    </div>
+
+</body>
+
+</html>
