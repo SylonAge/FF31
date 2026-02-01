@@ -2636,6 +2636,7 @@
 
         function rollBaseAttack() {
             const selectedClass = document.getElementById('sinif').value;
+            const rankValue = document.getElementById('rutbe')?.value || 'bronz';
 
             if (!selectedClass || selectedClass === "") {
                 alert("Lütfen önce karakterin sınıfını seçin.");
@@ -2665,21 +2666,31 @@
             const statBonus = parseInt(bonusInput ? bonusInput.value : 0) || 0;
             const rankBonus = getRankDiceBonus();
 
+            // Rütbeye göre zar tipini belirle
+            const RANK_DICE_SIDES = {
+                'bronz': 6,
+                'gumus': 8,
+                'altin': 10,
+                'elmas': 12,
+                'platin': 20
+            };
+            const diceSides = RANK_DICE_SIDES[rankValue] || 6;
+
             const modal = document.getElementById('rollModal');
             const modalResult = document.getElementById('modalResult');
             const modalTitle = document.getElementById('modalTitle');
             const rollDuration = 1000;
 
             // Zar atma öncesinde hesapla
-            const d6Rolls = [];
+            const diceRolls = [];
             for (let i = 0; i < 3; i++) {
-                d6Rolls.push(Math.floor(Math.random() * 6) + 1);
+                diceRolls.push(Math.floor(Math.random() * diceSides) + 1);
             }
-            const totalRoll = d6Rolls.reduce((a, b) => a + b, 0);
-            const totalDamage = totalRoll + statBonus;
+            const totalRoll = diceRolls.reduce((a, b) => a + b, 0);
+            const totalDamage = totalRoll + statBonus; // "birincil istatistik bonusu aynı kalacak" - user request
 
             modal.style.display = 'flex';
-            modalTitle.textContent = `Temel Saldırı (3D6 + ${primaryStatTR})`;
+            modalTitle.textContent = `Temel Saldırı (3D${diceSides} + ${primaryStatTR})`;
 
             modalResult.classList.add('modal-rolling');
             modalResult.textContent = 'Hasar Hesaplanıyor...';
@@ -2688,7 +2699,7 @@
 
             const animationInterval = setInterval(() => {
                 // Animasyon sırasında rastgele toplam göster
-                modalResult.textContent = Math.floor(Math.random() * 18) + 1 + statBonus;
+                modalResult.textContent = Math.floor(Math.random() * (3 * diceSides)) + 1 + statBonus;
             }, 50);
 
             setTimeout(() => {
@@ -2696,7 +2707,7 @@
 
                 modalResult.classList.remove('modal-rolling');
 
-                const breakdown = `(${d6Rolls.join(' + ')} Zar  ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} BONUSU)`;
+                const breakdown = `(${diceRolls.join(' + ')} Zar  ${statBonus >= 0 ? '+' : ''}${statBonus} ${primaryStatTR} BONUSU)`;
 
                 modalTitle.textContent = `Temel Hasar: ${breakdown}`;
                 modalResult.textContent = totalDamage;
@@ -2704,7 +2715,7 @@
                 modalResult.style.backgroundColor = '#d93025';
 
                 document.getElementById('diceResult').textContent = `Son Saldırı Hasarı: ${totalDamage}`;
-                addDiceToHistory('Temel Saldırı (3D6)', totalDamage);
+                addDiceToHistory(`Temel Saldırı (3D${diceSides})`, totalDamage);
 
             }, rollDuration);
         }
